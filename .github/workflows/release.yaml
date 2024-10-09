@@ -1,0 +1,39 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  release:
+    types: [created]
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: corretto
+          java-version: 11
+
+      - name: Create artifacts directory
+        run: |
+          mkdir artifacts
+      - name: Build data-stream-vectorization JAR
+        run: |
+          mvn package
+          cp target/data-stream-vectorization-1.0-SNAPSHOT.jar artifacts/
+      - name: List artifacts
+        working-directory: artifacts
+        run: |
+          ls -l
+      - name: Publish artifacts
+        if: github.event_name == 'release'
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: "artifacts/*"
