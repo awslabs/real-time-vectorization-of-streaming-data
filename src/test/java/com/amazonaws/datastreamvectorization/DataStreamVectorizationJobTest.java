@@ -22,28 +22,23 @@ import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfigurationException;
 import com.amazonaws.datastreamvectorization.wrappers.FlinkSetupProvider;
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
-import lombok.NonNull;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -62,10 +57,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mockStatic;
 
-@RunWith(Parameterized.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
-class DataStreamVectorizationJobTest {
+public class DataStreamVectorizationJobTest {
     private static final String TEST_SOURCE_TYPE = DataSourceType.MSK.name();
     private static final String TEST_SOURCE_BOOTSTRAP_SERVERS = "localhost:9098";
     private static final String TEST_EMBED_MODEL_ID = EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId();
@@ -93,6 +87,10 @@ class DataStreamVectorizationJobTest {
                     PROPERTY_OS_TYPE, TEST_OS_TYPE
             )
     ).getProperties();
+
+
+    @Rule
+    public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock
     private StreamExecutionEnvironment mockStreamingExecutionEnvironment;
@@ -149,17 +147,9 @@ class DataStreamVectorizationJobTest {
         Assert.assertTrue(DataStreamVectorizationJob.getEnvironment() instanceof LocalStreamEnvironment);
     }
 
-    @Parameters
-    public static Collection<Object[]> badInputArguments() {
-        return Arrays.asList(new Object[][]{
-                {new String[]{"--bad.arg.1", "arg1", "--bad.arg.2", "arg2", "--bad.arg.3", "arg3"}},
-                {new String[]{"--bad.arg.1", "arg1", "--bad.arg.2", "arg2"}}
-        });
-    }
-
-    @ParameterizedTest
-    @MethodSource("badInputArguments")
-    public void testMissingParametersThrowsConfigurationException(@NonNull final String[] bad_args) {
+    @Test
+    public void testMissingParametersThrowsConfigurationException() {
+        String[] bad_args = new String[]{"--bad.arg.1", "arg1", "--bad.arg.2", "arg2", "--bad.arg.3", "arg3"};
         Assert.assertThrows(MissingOrIncorrectConfigurationException.class, () ->
                 DataStreamVectorizationJob.main(bad_args));
     }

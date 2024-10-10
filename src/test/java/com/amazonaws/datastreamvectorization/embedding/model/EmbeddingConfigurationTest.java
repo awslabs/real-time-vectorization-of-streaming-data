@@ -18,16 +18,19 @@ package com.amazonaws.datastreamvectorization.embedding.model;
 import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfigurationException;
 import com.amazonaws.datastreamvectorization.exceptions.UnsupportedEmbeddingModelException;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.testutils.junit.extensions.parameterized.Parameters;
 import org.junit.Assert;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
@@ -128,7 +131,6 @@ class EmbeddingConfigurationTest {
         Assert.assertEquals(expectedConfigMap, config.getEmbeddingModelOverrideConfig());
     }
 
-    @Parameters
     public static Stream<Arguments> provideInvalidConfigurations() {
         return Stream.of(
                 Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
@@ -156,7 +158,7 @@ class EmbeddingConfigurationTest {
         assertEquals(expectedExceptionMessage, exception.getMessage());
     }
 
-    @Parameters
+
     public static Stream<Arguments> provideValidConfigurations() {
         return Stream.of(
                 Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
