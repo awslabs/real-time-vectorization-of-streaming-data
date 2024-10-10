@@ -26,6 +26,12 @@ jobs:
         run: |
           pwd
           ls -lrth
+          echo "completed ls"
+          cd ../
+          ls -lrth
+          echo "completed ls"
+          find . -type d -name "src"
+          echo "completed finding"
           mvn package -X -e
           cp target/data-stream-vectorization-1.0-SNAPSHOT.jar artifacts/
       - name: List artifacts
