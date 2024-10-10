@@ -22,20 +22,20 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v2
 
-      - name: Set up JUnit 5
-        run: |
-          mvn dependency:get \
-                -Dartifact=org.junit.jupiter:junit-jupiter-api:5.9.2:jar \
-                -Ddest=${{ github.workspace }}/lib/junit-jupiter-api.jar
-              mvn dependency:get \
-                -Dartifact=org.junit.jupiter:junit-jupiter-engine:5.9.2:jar \
-                -Ddest=${{ github.workspace }}/lib/junit-jupiter-engine.jar
-              mvn dependency:get \
-                -Dartifact=org.junit.jupiter:junit-jupiter-params:5.9.2:jar \
-                -Ddest=${{ github.workspace }}/lib/junit-jupiter-params.jar
-          echo "Done setting up JUnit5"
-          mvn dependency:list -Dverbose | grep "junit"
-          echo "Done checking JUnit5"
+#      - name: Set up JUnit 5
+#        run: |
+#          mvn dependency:get \
+#                -Dartifact=org.junit.jupiter:junit-jupiter-api:5.9.2:jar \
+#                -Ddest=${{ github.workspace }}/lib/junit-jupiter-api.jar
+#              mvn dependency:get \
+#                -Dartifact=org.junit.jupiter:junit-jupiter-engine:5.9.2:jar \
+#                -Ddest=${{ github.workspace }}/lib/junit-jupiter-engine.jar
+#              mvn dependency:get \
+#                -Dartifact=org.junit.jupiter:junit-jupiter-params:5.9.2:jar \
+#                -Ddest=${{ github.workspace }}/lib/junit-jupiter-params.jar
+#          echo "Done setting up JUnit5"
+#          mvn dependency:list -Dverbose | grep "junit"
+#          echo "Done checking JUnit5"
       - name: Create artifacts directory
         run: |
           mkdir artifacts
