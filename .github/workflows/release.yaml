@@ -30,9 +30,6 @@ jobs:
           pwd
           ls -lrth
           echo "completed ls"
-          cd ../
-          ls -lrth
-          echo "completed ls"
           find . -type d -name "src"
           echo "completed finding"
           mvn package -X -e
