@@ -19,6 +19,9 @@ jobs:
           distribution: corretto
           java-version: 11
 
+      - name: Checkout source
+        uses: actions/checkout@v2
+
       - name: Create artifacts directory
         run: |
           mkdir artifacts
