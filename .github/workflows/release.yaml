@@ -25,6 +25,7 @@ jobs:
       - name: Build data-stream-vectorization JAR
         run: |
           pwd
+          ls -lrth
           mvn package -X -e
           cp target/data-stream-vectorization-1.0-SNAPSHOT.jar artifacts/
       - name: List artifacts
