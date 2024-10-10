@@ -27,12 +27,7 @@ jobs:
           mkdir artifacts
       - name: Build data-stream-vectorization JAR
         run: |
-          pwd
-          ls -lrth
-          echo "completed ls"
-          find . -type d -name "src"
-          echo "completed finding"
-          mvn package -X -e
+          mvn package
           cp target/data-stream-vectorization-1.0-SNAPSHOT.jar artifacts/
       - name: List artifacts
         working-directory: artifacts
