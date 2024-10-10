@@ -18,6 +18,7 @@ package com.amazonaws.datastreamvectorization.embedding.model;
 import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfigurationException;
 import com.amazonaws.datastreamvectorization.exceptions.UnsupportedEmbeddingModelException;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.testutils.junit.extensions.parameterized.Parameters;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,7 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @RunWith(Parameterized.class)
 class EmbeddingConfigurationTest {
 
-    private static Stream<Arguments> provideModelIds() {
+    @Parameters
+    public static Stream<Arguments> provideModelIds() {
         return Stream.of(
                 Arguments.of("amazon.titan-embed-text-v1", EmbeddingModel.AMAZON_TITAN_TEXT_G1),
                 Arguments.of("amazon.titan-embed-text-v2:0", AMAZON_TITAN_TEXT_V2),
@@ -126,7 +128,8 @@ class EmbeddingConfigurationTest {
         Assert.assertEquals(expectedConfigMap, config.getEmbeddingModelOverrideConfig());
     }
 
-    private static Stream<Arguments> provideInvalidConfigurations() {
+    @Parameters
+    public static Stream<Arguments> provideInvalidConfigurations() {
         return Stream.of(
                 Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
                                         Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()
@@ -153,7 +156,8 @@ class EmbeddingConfigurationTest {
         assertEquals(expectedExceptionMessage, exception.getMessage());
     }
 
-    private static Stream<Arguments> provideValidConfigurations() {
+    @Parameters
+    public static Stream<Arguments> provideValidConfigurations() {
         return Stream.of(
                 Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
                                 Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()

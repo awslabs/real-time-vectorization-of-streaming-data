@@ -26,6 +26,7 @@ import lombok.NonNull;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.testutils.junit.extensions.parameterized.Parameters;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,7 +149,8 @@ class DataStreamVectorizationJobTest {
         Assert.assertTrue(DataStreamVectorizationJob.getEnvironment() instanceof LocalStreamEnvironment);
     }
 
-    private static Stream<Arguments> badInputArguments() {
+    @Parameters
+    public static Stream<Arguments> badInputArguments() {
         return Stream.of(
                 Arguments.of(
                         (Object) new String[] {"--bad.arg.1", "arg1", "--bad.arg.2", "arg2", "--bad.arg.3", "arg3"}),
