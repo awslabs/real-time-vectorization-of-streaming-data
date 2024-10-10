@@ -43,6 +43,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -150,12 +152,11 @@ class DataStreamVectorizationJobTest {
     }
 
     @Parameters
-    public static Stream<Arguments> badInputArguments() {
-        return Stream.of(
-                Arguments.of(
-                        (Object) new String[] {"--bad.arg.1", "arg1", "--bad.arg.2", "arg2", "--bad.arg.3", "arg3"}),
-                Arguments.of((Object) new String[] {"--bad.arg.1", "arg1", "--bad.arg.2", "arg2"})
-        );
+    public static Collection<Object[]> badInputArguments() {
+        return Arrays.asList(new Object[][]{
+                {new String[]{"--bad.arg.1", "arg1", "--bad.arg.2", "arg2", "--bad.arg.3", "arg3"}},
+                {new String[]{"--bad.arg.1", "arg1", "--bad.arg.2", "arg2"}}
+        });
     }
 
     @ParameterizedTest
