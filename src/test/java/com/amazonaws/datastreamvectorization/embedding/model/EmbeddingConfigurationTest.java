@@ -19,14 +19,10 @@ import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfig
 import com.amazonaws.datastreamvectorization.exceptions.UnsupportedEmbeddingModelException;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.junit.Assert;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -34,7 +30,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Stream;
 
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EmbeddingModelConfigurations.DIMENSIONS;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EmbeddingModelConfigurations.NORMALIZE;
@@ -49,26 +44,9 @@ import static com.amazonaws.datastreamvectorization.embedding.model.EmbeddingMod
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@RunWith(Parameterized.class)
-class EmbeddingConfigurationTest {
+@RunWith(Enclosed.class)
+public class EmbeddingConfigurationTest {
 
-    @Parameters
-    public static Stream<Arguments> provideModelIds() {
-        return Stream.of(
-                Arguments.of("amazon.titan-embed-text-v1", EmbeddingModel.AMAZON_TITAN_TEXT_G1),
-                Arguments.of("amazon.titan-embed-text-v2:0", AMAZON_TITAN_TEXT_V2),
-                Arguments.of("amazon.titan-embed-image-v1", AMAZON_TITAN_MULTIMODAL_G1),
-                Arguments.of("cohere.embed-english-v3", EmbeddingModel.COHERE_EMBED_ENGLISH),
-                Arguments.of("cohere.embed-multilingual-v3", EmbeddingModel.COHERE_EMBED_MULTILINGUAL)
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideModelIds")
-    public void testSupportedModels(String modelId, EmbeddingModel expectedModel) {
-        EmbeddingConfiguration config = new EmbeddingConfiguration(modelId, Collections.EMPTY_MAP);
-        Assert.assertEquals(expectedModel, config.getEmbeddingModel());
-    }
 
     @Test
     public void testUnsupportedModelsThrowException() {
@@ -78,7 +56,7 @@ class EmbeddingConfigurationTest {
 
     @Test
     public void testParseFrom_validConfigs() {
-       Properties properties =ParameterTool.fromMap(
+        Properties properties =ParameterTool.fromMap(
                 Map.of(PROPERTY_EMBEDDING_MODEL_ID, AMAZON_TITAN_TEXT_V2.getModelId(),
                         PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name(),
                         PROPERTY_EMBEDDING_MODEL_OVERRIDES + NORMALIZE, "true",
@@ -98,9 +76,9 @@ class EmbeddingConfigurationTest {
         Assert.assertEquals(expectedConfig.getEmbeddingInputConfig(), actualConfig.getEmbeddingInputConfig());
     }
 
-   @Test
+    @Test
     public void testParseFrom_invalidConfig_throwException() {
-       Properties properties =ParameterTool.fromMap(
+        Properties properties =ParameterTool.fromMap(
                 Map.of(PROPERTY_EMBEDDING_MODEL_ID, AMAZON_TITAN_MULTIMODAL_G1.getModelId(),
                         PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name(),
                         PROPERTY_EMBEDDING_MODEL_OVERRIDES + OUTPUT_EMBEDDING_LENGTH, "12"
@@ -113,10 +91,10 @@ class EmbeddingConfigurationTest {
                 .embeddingInputConfig(Collections.emptyMap())
                 .build();
 
-       Exception exception = assertThrows(MissingOrIncorrectConfigurationException.class,
-               () -> EmbeddingConfiguration.parseFrom(properties).build());
-       assertEquals("Invalid value 12 found for configuration " + OUTPUT_EMBEDDING_LENGTH
-               + ". Please refer documentation for allowed values.", exception.getMessage());
+        Exception exception = assertThrows(MissingOrIncorrectConfigurationException.class,
+                () -> EmbeddingConfiguration.parseFrom(properties).build());
+        assertEquals("Invalid value 12 found for configuration " + OUTPUT_EMBEDDING_LENGTH
+                + ". Please refer documentation for allowed values.", exception.getMessage());
     }
 
     @Test
@@ -131,76 +109,119 @@ class EmbeddingConfigurationTest {
         Assert.assertEquals(expectedConfigMap, config.getEmbeddingModelOverrideConfig());
     }
 
-    public static Stream<Arguments> provideInvalidConfigurations() {
-        return Stream.of(
-                Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
-                                        Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()
-                                                , PROPERTY_EMBEDDING_CHARSET, "")
-                                ).getProperties())
-                                .build(),
-                        "Input stream Charset is required."
-                ),
+    @RunWith(Parameterized.class)
+    public static class SupportedModelsTest {
 
-                Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
-                                        Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()
-                                                , PROPERTY_EMBEDDING_CHARSET, "xyz")
-                                ).getProperties())
-                                .build(),
-                        "Input stream Charset is not supported."
-                )
-        );
+        // fields used together with @Parameter must be public
+        @Parameterized.Parameter(0)
+        public String modelId;
+        @Parameterized.Parameter(1)
+        public EmbeddingModel expectedModel;
+
+        // creates the test data
+        @Parameterized.Parameters(name = "{index}: Test with m1={0}, m2 ={1} ")
+        public static Collection<Object[]> data() {
+            Object[][] data = new Object[][]{
+                    {"amazon.titan-embed-text-v1", EmbeddingModel.AMAZON_TITAN_TEXT_G1},
+                    {"amazon.titan-embed-text-v2:0", AMAZON_TITAN_TEXT_V2},
+                    {"amazon.titan-embed-image-v1", AMAZON_TITAN_MULTIMODAL_G1},
+                    {"cohere.embed-english-v3", EmbeddingModel.COHERE_EMBED_ENGLISH},
+                    {"cohere.embed-multilingual-v3", EmbeddingModel.COHERE_EMBED_MULTILINGUAL}
+            };
+            return Arrays.asList(data);
+        }
+
+        @Test
+        public void testSupportedModels() {
+            EmbeddingConfiguration config = new EmbeddingConfiguration(modelId, Collections.EMPTY_MAP);
+            Assert.assertEquals(expectedModel, config.getEmbeddingModel());
+        }
+
     }
 
-    @ParameterizedTest
-    @MethodSource("provideInvalidConfigurations")
-    public void testInvalidConfigs(EmbeddingConfiguration config, String expectedExceptionMessage) {
-        Exception exception = assertThrows(MissingOrIncorrectConfigurationException.class, config::validate);
-        assertEquals(expectedExceptionMessage, exception.getMessage());
+    @RunWith(Parameterized.class)
+    public static class ValidConfigurationsTest {
+
+        // fields used together with @Parameter must be public
+        @Parameterized.Parameter
+        public EmbeddingConfiguration config;
+
+        // creates the test data
+        @Parameterized.Parameters(name = "{index}: Test with config={0}")
+        public static Collection<Object[]> data() {
+            Object[][] data = new Object[][]{
+                    {EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(Map.of(
+                            PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()))
+                            .getProperties())
+                            .build()},
+                    {EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(Map.of(
+                            PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId(),
+                            PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name()))
+                            .getProperties())
+                            .build()},
+                    {EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(Map.of(
+                            PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId(),
+                            PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name(),
+                            PROPERTY_EMBEDDING_MODEL_OVERRIDES, "some_value"))
+                            .getProperties())
+                            .build()},
+                    {EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(Map.of(
+                            PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId(),
+                            PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name(),
+                            PROPERTY_EMBEDDING_MODEL_OVERRIDES, "some_value",
+                            PROPERTY_EMBEDDING_INPUT_CONFIG + PROPERTY_EMBEDDING_INPUT_JSON_FIELDS,
+                            "[\"some\", \"fields\", \"to\", \"embed\",,]"))
+                            .getProperties())
+                            .build()},
+                    {new EmbeddingConfiguration("amazon.titan-embed-text-v1",
+                            Map.of("key1", "value1"))},
+                    {new EmbeddingConfiguration("amazon.titan-embed-text-v1",
+                            Map.of("key1", "value1"), StandardCharsets.US_ASCII.name())}
+            };
+            return Arrays.asList(data);
+        }
+
+        @Test
+        public void testValidConfigs() {
+            config.validate();
+        }
+
     }
 
+    @RunWith(Parameterized.class)
+    public static class InvalidConfigurationsTest {
 
-    public static Stream<Arguments> provideValidConfigurations() {
-        return Stream.of(
-                Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
-                                Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()
-                                )).getProperties())
-                        .build()
-                ),
-                Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
-                                        Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId(),
-                                                PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name())
-                                ).getProperties())
-                                .build()
-                ),
-                Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
-                                        Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId(),
-                                                PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name(),
-                                                PROPERTY_EMBEDDING_MODEL_OVERRIDES, "some_value")
-                                ).getProperties())
-                                .build()
-                ),
-                Arguments.of(EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
-                                        Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId(),
-                                                PROPERTY_EMBEDDING_CHARSET, StandardCharsets.US_ASCII.name(),
-                                                PROPERTY_EMBEDDING_MODEL_OVERRIDES, "some_value",
-                                                PROPERTY_EMBEDDING_INPUT_CONFIG + PROPERTY_EMBEDDING_INPUT_JSON_FIELDS,
-                                                "[\"some\", \"fields\", \"to\", \"embed\",,]"
-                                                )
-                                ).getProperties())
-                                .build()
-                ),
-                Arguments.of(new EmbeddingConfiguration("amazon.titan-embed-text-v1",
-                        Map.of("key1", "value1"))
-                ),
-                Arguments.of(new EmbeddingConfiguration("amazon.titan-embed-text-v1",
-                        Map.of("key1", "value1"), StandardCharsets.US_ASCII.name())
-                )
-        );
+        // fields used together with @Parameter must be public
+        @Parameterized.Parameter
+        public EmbeddingConfiguration config;
+        @Parameterized.Parameter(1)
+        public String expectedExceptionMessage;
+
+        // creates the test data
+        @Parameterized.Parameters(name = "{index}: Test with config={0}")
+        public static Collection<Object[]> data() {
+            Object[][] data = new Object[][]{
+                    {EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
+                            Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()
+                                    , PROPERTY_EMBEDDING_CHARSET, "")
+                    ).getProperties())
+                            .build(),
+                            "Input stream Charset is required."},
+                    {EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
+                            Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()
+                                    , PROPERTY_EMBEDDING_CHARSET, "xyz")
+                    ).getProperties())
+                            .build(),
+                            "Input stream Charset is not supported."}};
+            return Arrays.asList(data);
+        }
+
+        @Test
+        public void testInvalidConfigs() {
+            Exception exception = assertThrows(MissingOrIncorrectConfigurationException.class, config::validate);
+            assertEquals(expectedExceptionMessage, exception.getMessage());
+        }
+
     }
 
-    @ParameterizedTest
-    @MethodSource("provideValidConfigurations")
-    public void testValidConfigs(EmbeddingConfiguration config) {
-        config.validate();
-    }
 }

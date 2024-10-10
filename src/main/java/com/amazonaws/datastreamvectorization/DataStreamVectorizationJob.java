@@ -76,10 +76,6 @@ public class DataStreamVectorizationJob {
         applicationProperties = loadApplicationProperties(args, environment);
         log.info("Loaded application properties: {}", applicationProperties);
 
-        // Get the AWS region
-        AwsRegionProvider regionProvider = new DefaultAwsRegionProviderChain();
-        String region = regionProvider.getRegion();
-
         //source
         sourceConfiguration = getDataSourceConfiguration(applicationProperties);
         log.info("Source Configuration: {}", sourceConfiguration);
@@ -120,6 +116,11 @@ public class DataStreamVectorizationJob {
         // TODO: Chunking
         embeddingConfiguration = getEmbeddingConfiguration(applicationProperties);
         log.info("Embedding Configuration: {}", embeddingConfiguration);
+
+        // Get the AWS region
+        AwsRegionProvider regionProvider = new DefaultAwsRegionProviderChain();
+        String region = regionProvider.getRegion();
+
         EmbeddingGenerator embeddingGenerator = new EmbeddingGeneratorFactory(region)
                 .getEmbeddingGenerator(sourceConfiguration.getStreamDataType().getClazz(), embeddingConfiguration);
         DataStream<JSONObject> embeddingDataStream = AsyncDataStream.unorderedWait(
