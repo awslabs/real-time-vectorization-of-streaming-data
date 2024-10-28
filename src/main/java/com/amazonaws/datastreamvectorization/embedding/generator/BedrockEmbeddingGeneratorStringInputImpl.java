@@ -16,8 +16,10 @@
 package com.amazonaws.datastreamvectorization.embedding.generator;
 
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingInput;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.streaming.api.functions.async.ResultFuture;
 import org.json.JSONObject;
 
@@ -25,14 +27,16 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EMBED_INPUT_TEXT_KEY_NAME;
+import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EMBED_INPUT_CHUNK_TEXT_NAME;
+import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EMBED_INPUT_CHUNK_KEY_NAME;
+import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EMBED_INPUT_ORIGINAL_TEXT_NAME;
 
 /**
  * This class generates embeddings for String input type using provided Bedrock model and
  * returns a JSONObject containing embeddings.
  */
 @Slf4j
-public class BedrockEmbeddingGeneratorStringInputImpl extends BedrockEmbeddingGenerator<String, JSONObject> {
+public class BedrockEmbeddingGeneratorStringInputImpl extends BedrockEmbeddingGenerator<EmbeddingInput, JSONObject> {
 
     public BedrockEmbeddingGeneratorStringInputImpl(@NonNull final String region,
                                                     @NonNull final EmbeddingConfiguration config) {
@@ -46,17 +50,23 @@ public class BedrockEmbeddingGeneratorStringInputImpl extends BedrockEmbeddingGe
      * @param resultFuture
      */
     @Override
-    public void asyncInvoke(@NonNull final String input, @NonNull final ResultFuture<JSONObject> resultFuture) {
+    public void asyncInvoke(@NonNull final EmbeddingInput input, @NonNull final ResultFuture<JSONObject> resultFuture) {
         long startTime = System.currentTimeMillis();
         CompletableFuture<JSONObject> embeddingFuture = CompletableFuture.supplyAsync(() -> {
             Optional<JSONObject> responseOptional = getEmbeddingJSON(input);
             if (responseOptional.isEmpty()) {
-                log.warn("No embedding generated for input: [{}]", input);
+                log.warn("No embedding generated for input: [{}]", input.getStringToEmbed());
                 return new JSONObject();
             }
             // TODO: See if we need to add additional fields to the response
             JSONObject response = responseOptional.get();
-            response.put(EMBED_INPUT_TEXT_KEY_NAME, input);
+            response.put(EMBED_INPUT_ORIGINAL_TEXT_NAME, input.getOriginalData());
+            if (!StringUtils.isEmpty(input.getChunkData())) {
+                response.put(EMBED_INPUT_CHUNK_TEXT_NAME, input.getChunkData());
+            }
+            if (!StringUtils.isEmpty(input.getChunkKey())) {
+                response.put(EMBED_INPUT_CHUNK_KEY_NAME, input.getChunkKey());
+            }
             reportLatencyMetric(startTime);
             return response;
         });

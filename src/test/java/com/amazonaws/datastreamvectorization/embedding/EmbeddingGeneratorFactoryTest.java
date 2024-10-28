@@ -15,7 +15,6 @@
 */
 package com.amazonaws.datastreamvectorization.embedding;
 
-import com.amazonaws.datastreamvectorization.embedding.generator.BedrockEmbeddingGeneratorJsonInputImpl;
 import com.amazonaws.datastreamvectorization.embedding.generator.BedrockEmbeddingGeneratorStringInputImpl;
 import com.amazonaws.datastreamvectorization.embedding.generator.EmbeddingGenerator;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
@@ -41,10 +40,8 @@ class EmbeddingGeneratorFactoryTest {
 
     private static Stream<Arguments> provideParameters() {
         return Stream.of(
-                Arguments.of(
-                        String.class, BedrockEmbeddingGeneratorStringInputImpl.class,
-                        JSONObject.class, BedrockEmbeddingGeneratorJsonInputImpl.class
-                )
+                Arguments.of(String.class, BedrockEmbeddingGeneratorStringInputImpl.class),
+                Arguments.of(JSONObject.class, BedrockEmbeddingGeneratorStringInputImpl.class)
         );
     }
 

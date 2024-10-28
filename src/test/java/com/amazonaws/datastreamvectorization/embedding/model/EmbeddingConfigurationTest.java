@@ -17,6 +17,7 @@ package com.amazonaws.datastreamvectorization.embedding.model;
 
 import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfigurationException;
 import com.amazonaws.datastreamvectorization.exceptions.UnsupportedEmbeddingModelException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.junit.Assert;
 import org.junit.Test;
@@ -202,7 +203,7 @@ public class EmbeddingConfigurationTest {
             Object[][] data = new Object[][]{
                     {EmbeddingConfiguration.parseFrom(ParameterTool.fromMap(
                             Map.of(PROPERTY_EMBEDDING_MODEL_ID, EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId()
-                                    , PROPERTY_EMBEDDING_CHARSET, "")
+                                    , PROPERTY_EMBEDDING_CHARSET, StringUtils.EMPTY)
                     ).getProperties())
                             .build(),
                             "Input stream Charset is required."},

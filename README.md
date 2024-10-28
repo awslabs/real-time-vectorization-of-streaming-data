@@ -1,17 +1,14 @@
-## My Project
+<div style="text-align: center">
+<h1>Real-time Vector Embedding Blueprint</h1>
 
-TODO: Fill this README out!
+Real-time Vector Embedding Blueprint is an Amazon Managed Service for Apache Flink (MSF) blueprint which deploys an MSF app and other needed infrastructure for vectorizing incoming stream data and persisting the vectorized data in a vector DB. The MSF app consumes from an Amazon MSK cluster, creates embeddings of these messages with a supported Amazon Bedrock model, and stores the embeddings to an Amazon OpenSearch domain or collection.
+</div>
 
-Be sure to:
+## Get started with Real-time Vector Embedding
 
-* Change the title in this README
-* Edit your repository description on GitHub
+### Installation
 
-## Security
+Follow the installation instructions [here](cdk-infra/notes/installation.md) to install the shared libraries and begin developing.
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This project is licensed under the Apache-2.0 License.
-
+### Deploying
+Follow the steps [here](cdk-infra/apps/real-time-vector-embedding-application/msk-to-bedrock-to-opensearch/README.md) to build, deploy, and run the application.

@@ -29,6 +29,15 @@ jobs:
         run: |
           mvn package
           cp target/data-stream-vectorization-1.0-SNAPSHOT.jar artifacts/
+      - name: Build CDK template
+        working-directory: cdk-infra
+        run: |
+          cd shared
+          npm install
+          cd ../apps/real-time-vector-embedding-application/msk-to-bedrock-to-opensearch/cdk-infra
+          npm install
+          cdk synth --json
+          cp cdk.out/BootstrapCdkStack.template.json ../../../../../artifacts/
       - name: List artifacts
         working-directory: artifacts
         run: |

@@ -15,8 +15,10 @@
 */
 package com.amazonaws.datastreamvectorization.datasink;
 
+import java.util.Collections;
 import java.util.Properties;
 import java.util.stream.Stream;
+
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,6 +30,8 @@ import com.amazonaws.datastreamvectorization.datasink.model.DataSinkConfiguratio
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchDataSinkConfiguration;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfigurationException;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.FlinkApplicationProperties.PROPERTY_OS_ENDPOINT;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.FlinkApplicationProperties.PROPERTY_OS_INDEX;
@@ -47,7 +51,9 @@ class DataSinkFactoryTest {
         }
 
         assertThrows(MissingOrIncorrectConfigurationException.class,
-                () -> new DataSinkFactory().getDataSink(new UnsupportedConfiguration()));
+                () -> new DataSinkFactory().getDataSink(new UnsupportedConfiguration(),
+                        new EmbeddingConfiguration(EmbeddingModel.AMAZON_TITAN_TEXT_G1.getModelId(), Collections.emptyMap())
+                ));
     }
 
     @ParameterizedTest
@@ -59,7 +65,9 @@ class DataSinkFactoryTest {
         properties.setProperty(PROPERTY_OS_TYPE, OpenSearchType.SERVERLESS.name());
         OpenSearchDataSinkConfiguration testOSConfig = OpenSearchDataSinkConfiguration
                 .parseFrom("us-east-1", properties).build();
-        Sink<JSONObject> dataSink = new DataSinkFactory().getDataSink(testOSConfig);
+        EmbeddingConfiguration embeddingConfig = new EmbeddingConfiguration(
+                EmbeddingModel.AMAZON_TITAN_TEXT_V2.getModelId(), Collections.emptyMap());
+        Sink<JSONObject> dataSink = new DataSinkFactory().getDataSink(testOSConfig, embeddingConfig);
         assertInstanceOf(expectedOutputTypeClass, dataSink);
     }
 }

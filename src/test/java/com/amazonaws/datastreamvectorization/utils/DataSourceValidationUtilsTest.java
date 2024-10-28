@@ -15,6 +15,7 @@
 */
 package com.amazonaws.datastreamvectorization.utils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -25,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 class DataSourceValidationUtilsTest {
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "  ", "urn:some:uri:1.2.3", "telnet://aws.jam", "https:boot.amazon.com", "https::amazon.com",
+    @ValueSource(strings = {StringUtils.EMPTY, "  ", "urn:some:uri:1.2.3", "telnet://aws.jam", "https:boot.amazon.com", "https::amazon.com",
             "ftp://amazon.com"})
     void validBootstrapServers_ShouldReturnFalse(String input) {
         assertFalse(DataSourceValidationUtils.validBootstrapServers(input));
