@@ -1,0 +1,57 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [created]
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: v18.16.1
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: corretto
+          java-version: 11
+      - name: Install AWS CDK
+        run: |
+          npm install -g aws-cdk
+      - name: Checkout source
+        uses: actions/checkout@v2
+
+      - name: Create artifacts directory
+        run: |
+          mkdir artifacts
+      - name: Build data-stream-vectorization JAR
+        run: |
+          mvn package
+          cp target/data-stream-vectorization-1.0-SNAPSHOT.jar artifacts/
+      - name: Build CDK template
+        working-directory: cdk-infra
+        run: |
+          cd shared
+          npm install
+          cd ../apps/real-time-vector-embedding-application/msk-to-bedrock-to-opensearch/cdk-infra
+          npm install
+          cdk synth --json
+          cp cdk.out/BootstrapCdkStack.template.json ../../../../../artifacts/
+      - name: List artifacts
+        working-directory: artifacts
+        run: |
+          ls -l
+      - name: Publish artifacts
+        if: github.event_name == 'release'
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: "artifacts/*"
