@@ -16,7 +16,9 @@
 package com.amazonaws.datastreamvectorization.embedding.generator;
 
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingInput;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.metrics.groups.OperatorMetricGroup;
 import org.apache.flink.streaming.api.functions.async.ResultFuture;
@@ -43,7 +45,6 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EMBED_INPUT_TEXT_KEY_NAME;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EmbeddingModelConfigurations.DIMENSIONS;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EmbeddingModelConfigurations.EMBEDDING_CONFIG;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EmbeddingModelConfigurations.EMBEDDING_TYPES;
@@ -108,18 +109,18 @@ public class BedrockEmbeddingGeneratorStringInputImplTest {
 
         // invocation
         CompletableFuture<Collection<JSONObject>> resultFuture = new CompletableFuture<>();
-        sut.asyncInvoke("text", new AsyncResultFuture<>(resultFuture));
+        sut.asyncInvoke(new EmbeddingInput("text", StringUtils.EMPTY, StringUtils.EMPTY), new AsyncResultFuture<>(resultFuture));
 
         // validate results
         JSONObject expectedResponse = new JSONObject(mockResponseJson);
-        expectedResponse.put("inputText", "text");
+        expectedResponse.put("originalText", "text");
         expectedResponse.put("@timestamp", new Date().toString());
 
         Collection<JSONObject> responses = resultFuture.get(5, TimeUnit.SECONDS);
         assertNotNull(responses);
         assertEquals(1, responses.size());
         JSONObject response = responses.iterator().next();
-        assertEquals(expectedResponse.getString("inputText"), response.getString("inputText"));
+        assertEquals(expectedResponse.getString("originalText"), response.getString("originalText"));
         assertEquals(expectedResponse.getInt("inputTextTokenCount"), response.getInt("inputTextTokenCount"));
         assertNotNull(response.getString("@timestamp"));
         assertEquals(3, expectedResponse.getJSONArray("embedding").length());
@@ -141,8 +142,9 @@ public class BedrockEmbeddingGeneratorStringInputImplTest {
 
         // invocation
         CompletableFuture<Collection<JSONObject>> resultFuture = new CompletableFuture<>();
-        sut.asyncInvoke("text", new AsyncResultFuture<>(resultFuture));
-        sut.asyncInvoke("text", new AsyncResultFuture<>(resultFuture));
+        sut.asyncInvoke(new EmbeddingInput("text", StringUtils.EMPTY, StringUtils.EMPTY), new AsyncResultFuture<>(resultFuture));
+        sut.asyncInvoke(new EmbeddingInput("text that is chunked", StringUtils.EMPTY, "text that is"), new AsyncResultFuture<>(resultFuture));
+        sut.asyncInvoke(new EmbeddingInput("text that is chunked", StringUtils.EMPTY, "chunked"), new AsyncResultFuture<>(resultFuture));
 
         try {
             resultFuture.get(5, TimeUnit.SECONDS);
@@ -179,8 +181,8 @@ public class BedrockEmbeddingGeneratorStringInputImplTest {
             sut.setRuntimeContext(mockRuntimeContext);
 
             // invocation
-            String inputText = "text";
-            Optional<JSONObject> embeddingResult = sut.getEmbeddingJSON(inputText);
+            EmbeddingInput input = new EmbeddingInput("text", StringUtils.EMPTY, StringUtils.EMPTY);
+            Optional<JSONObject> embeddingResult = sut.getEmbeddingJSON(input);
 
             // validate results
             assertTrue(embeddingResult.isPresent());
@@ -206,7 +208,7 @@ public class BedrockEmbeddingGeneratorStringInputImplTest {
             sut.setRuntimeContext(mockRuntimeContext);
 
             // invocation
-            Optional<JSONObject> embeddingResult = sut.getEmbeddingJSON("");
+            Optional<JSONObject> embeddingResult = sut.getEmbeddingJSON(new EmbeddingInput(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY));
 
             // validate results
             assertFalse(embeddingResult.isPresent());
@@ -236,7 +238,7 @@ public class BedrockEmbeddingGeneratorStringInputImplTest {
             JSONObject result = sut.constructInputBody("sample-text");
 
             // validate results
-            assertEquals("sample-text", result.getString(EMBED_INPUT_TEXT_KEY_NAME));
+            assertEquals("sample-text", result.getJSONArray(EmbeddingModel.COHERE_EMBED_ENGLISH.getInputKey()).get(0));
             assertEquals(properties.getProperty(PROPERTY_EMBEDDING_MODEL_OVERRIDES + INPUT_TYPE),
                     result.getString(INPUT_TYPE));
             assertEquals(properties.getProperty(PROPERTY_EMBEDDING_MODEL_OVERRIDES + TRUNCATE),
@@ -268,7 +270,7 @@ public class BedrockEmbeddingGeneratorStringInputImplTest {
             JSONObject result = sut.constructInputBody("sample-text");
 
             // validate results
-            assertEquals("sample-text", result.getString(EMBED_INPUT_TEXT_KEY_NAME));
+            assertEquals("sample-text", result.getString(EmbeddingModel.AMAZON_TITAN_TEXT_V2.getInputKey()));
             assertFalse(result.has(OUTPUT_EMBEDDING_LENGTH));
             assertTrue((Boolean) result.get(NORMALIZE));
             assertEquals(128, result.getInt(DIMENSIONS));
@@ -295,7 +297,7 @@ public class BedrockEmbeddingGeneratorStringInputImplTest {
             JSONObject result = sut.constructInputBody("sample-text");
 
             // validate results
-            assertEquals("sample-text", result.getString(EMBED_INPUT_TEXT_KEY_NAME));
+            assertEquals("sample-text", result.getString(EmbeddingModel.AMAZON_TITAN_MULTIMODAL_G1.getInputKey()));
             assertTrue(result.has(EMBEDDING_CONFIG));
             assertTrue(result.getJSONObject(EMBEDDING_CONFIG).has(OUTPUT_EMBEDDING_LENGTH));
             assertEquals(1024, result.getJSONObject(EMBEDDING_CONFIG).getInt(OUTPUT_EMBEDDING_LENGTH));

@@ -20,17 +20,24 @@ import com.amazonaws.datastreamvectorization.datasink.model.DataSinkConfiguratio
 import com.amazonaws.datastreamvectorization.datasource.DataSourceFactory;
 import com.amazonaws.datastreamvectorization.datasource.model.DataSourceConfiguration;
 import com.amazonaws.datastreamvectorization.datasource.model.StreamDataType;
+import com.amazonaws.datastreamvectorization.embedding.model.ChunkingInput;
+import com.amazonaws.datastreamvectorization.embedding.preprocessor.ChunkingFlatMapFunction;
 import com.amazonaws.datastreamvectorization.embedding.EmbeddingGeneratorFactory;
 import com.amazonaws.datastreamvectorization.embedding.generator.EmbeddingGenerator;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingInput;
+import com.amazonaws.datastreamvectorization.embedding.preprocessor.JSONChunkingInputFlatMapFunction;
+import com.amazonaws.datastreamvectorization.embedding.preprocessor.StringChunkingInputMapFunction;
 import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfigurationException;
+import com.amazonaws.datastreamvectorization.embedding.preprocessor.JSONPreprocessor;
 import com.amazonaws.regions.AwsRegionProvider;
 import com.amazonaws.regions.DefaultAwsRegionProviderChain;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.connector.sink2.Sink;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.streaming.api.datastream.AsyncDataStream;
@@ -84,38 +91,61 @@ public class DataStreamVectorizationJob {
                 environment.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka source");
         log.info("Source data stream added to environment.");
 
+        embeddingConfiguration = getEmbeddingConfiguration(applicationProperties);
+        log.info("Embedding Configuration: {}", embeddingConfiguration);
+
+        FlatMapFunction<ChunkingInput, EmbeddingInput> chunkingFunction =
+                new ChunkingFlatMapFunction(embeddingConfiguration);
+
         DataStream filteredMessages;
         // Filter out empty strings in input stream
         if (StreamDataType.STRING.equals(sourceConfiguration.getStreamDataType())) {
-            log.info("Filtering for empty string messages.");
+            MapFunction<String, ChunkingInput> stringChunkingInputFunction = new StringChunkingInputMapFunction();
+            log.debug("Checking for empty string messages.");
             filteredMessages = sourceDataStream.filter(object -> {
-                log.info("String is Empty: {}", ObjectUtils.isEmpty(object));
-                if (ObjectUtils.isEmpty(object)) {
+                log.debug("String Message is empty: {}", isEmpty(object));
+                if (isEmpty(object)) {
                     log.info("Filtered empty string message in stream.");
                 }
                 // filter function retains only those element for which the function returns true.
-                return !ObjectUtils.isEmpty(object);
+                return !isEmpty(object);
 
-            }).uid("empty-string-message-filter");
+            }).uid("empty-string-message-filter")
+                    .map(stringChunkingInputFunction)
+                    .uid("string-to-chunking-input")
+                    .flatMap(chunkingFunction)
+                    .uid("chunk-message-flatmap");
         } else if (StreamDataType.JSON.equals(sourceConfiguration.getStreamDataType())) {
-            log.info("Filtering for empty JSON messages.");
-            filteredMessages = sourceDataStream.filter(jsonObject -> {
+            FlatMapFunction<JSONObject, ChunkingInput> jsonChunkingInputFunction =
+                    new JSONChunkingInputFlatMapFunction(embeddingConfiguration);
+            log.debug("Checking for empty JSON messages.");
+            DataStream<JSONObject> filteredEmptyMessages = sourceDataStream.filter(jsonObject -> {
                 boolean isEmpty = isEmpty(jsonObject) || ((JSONObject) jsonObject).isEmpty();
-                log.info("JSON isEmpty: {}", isEmpty);
+                log.debug("JSON message isEmpty: {}", isEmpty);
                 if (isEmpty) {
                     log.info("Filtered empty json message in stream.");
                 }
                 // filter function retains only those element for which the function returns true.
                 return !isEmpty;
             }).uid("empty-json-message-filter");
+
+            JSONPreprocessor jsonPreprocessor = new JSONPreprocessor(embeddingConfiguration);
+            DataStream<JSONObject> filteredJsonStream = AsyncDataStream.unorderedWait(
+                    filteredEmptyMessages, (RichAsyncFunction) jsonPreprocessor,
+                            DEFAULT_EMBEDDING_ASYNC_TIMEOUT,
+                            DEFAULT_EMBEDDING_ASYNC_TIMEOUT_UNIT,
+                            DEFAULT_EMBEDDING_ASYNC_MAX_IO)
+                    .uid("json-to-embed-filter");
+            filteredMessages = filteredJsonStream
+                    .filter(jsonObject -> !jsonObject.isEmpty())
+                    .flatMap(jsonChunkingInputFunction)
+                    .uid("json-to-chunking-input")
+                    .flatMap(chunkingFunction)
+                    .uid("chunk-json-message-flatmap");
         } else {
             throw new MissingOrIncorrectConfigurationException("Unsupported data type for source stream. "
                     + sourceConfiguration.getStreamDataType());
         }
-
-        // TODO: Chunking
-        embeddingConfiguration = getEmbeddingConfiguration(applicationProperties);
-        log.info("Embedding Configuration: {}", embeddingConfiguration);
 
         // Get the AWS region
         AwsRegionProvider regionProvider = new DefaultAwsRegionProviderChain();
@@ -137,16 +167,16 @@ public class DataStreamVectorizationJob {
             log.info("Should exclude JSON: {}", jsonObject.isEmpty());
             return !jsonObject.isEmpty();
         });
-        log.info("Filtered embedding output stream.");
+        log.debug("Filtered embedding output stream.");
 
         //sink
         sinkConfiguration = getDataSinkConfiguration(region, applicationProperties);
         log.info("Sink Configuration: {}", sinkConfiguration);
-        Sink sink = new DataSinkFactory().getDataSink(sinkConfiguration);
+        Sink sink = new DataSinkFactory().getDataSink(sinkConfiguration, embeddingConfiguration);
         filteredEmbeddingResults.sinkTo(sink);
-        log.info("Sink added to embedded stream.");
+        log.debug("Sink added to embedded stream.");
 
         //process
-        environment.execute("MSK Flink Bedrock Application");
+        environment.execute("Real-time vector embedding application");
     }
 }

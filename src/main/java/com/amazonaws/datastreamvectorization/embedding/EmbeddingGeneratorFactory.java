@@ -15,7 +15,6 @@
 */
 package com.amazonaws.datastreamvectorization.embedding;
 
-import com.amazonaws.datastreamvectorization.embedding.generator.BedrockEmbeddingGeneratorJsonInputImpl;
 import com.amazonaws.datastreamvectorization.embedding.generator.BedrockEmbeddingGeneratorStringInputImpl;
 import com.amazonaws.datastreamvectorization.embedding.generator.EmbeddingGenerator;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
@@ -44,12 +43,10 @@ public class EmbeddingGeneratorFactory {
      */
     public EmbeddingGenerator getEmbeddingGenerator(@NonNull final Class<?> inputDataType,
                                                     @NonNull final EmbeddingConfiguration embeddingConfiguration) {
-        if (String.class == inputDataType) {
+        if (String.class == inputDataType || JSONObject.class == inputDataType) {
             return new BedrockEmbeddingGeneratorStringInputImpl(region, embeddingConfiguration);
         }
-        if (JSONObject.class == inputDataType) {
-            return new BedrockEmbeddingGeneratorJsonInputImpl(region, embeddingConfiguration);
-        }
+
         // TODO: add embedding generator for JSON input data type
         throw new UnsupportedInputStreamDataTypeException("Only String or JSON input data types are supported.");
     }

@@ -16,6 +16,7 @@
 package com.amazonaws.datastreamvectorization.utils;
 
 import com.amazonaws.datastreamvectorization.exceptions.MissingOrIncorrectConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -58,7 +59,7 @@ class DataSinkValidationUtilsTest {
 
     private static Stream<Arguments> provideInvalidFlushIntervals() {
         Properties propertiesWithEmptyFlushInterval = new Properties();
-        propertiesWithEmptyFlushInterval.setProperty(PROPERTY_OS_BULK_FLUSH_INTERVAL_MILLIS, "");
+        propertiesWithEmptyFlushInterval.setProperty(PROPERTY_OS_BULK_FLUSH_INTERVAL_MILLIS, StringUtils.EMPTY);
 
         Properties propertiesWithNegativeFlushInterval = new Properties();
         propertiesWithNegativeFlushInterval.setProperty(PROPERTY_OS_BULK_FLUSH_INTERVAL_MILLIS, "-100");

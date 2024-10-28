@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -41,6 +42,7 @@ import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 /**
  * Class containing the embedding model and client provided embedding configs.
  */
+@Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
@@ -51,6 +53,8 @@ public class EmbeddingConfiguration implements Serializable {
     public static final TimeUnit DEFAULT_EMBEDDING_ASYNC_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
     public static final int DEFAULT_EMBEDDING_ASYNC_MAX_IO = 1000;
     public static final String DEFAULT_EMBEDDING_CHARSET = "UTF-8";
+    public static final ChunkingType DEFAULT_EMBEDDING_CHUNKING_TYPE = ChunkingType.SPLIT_BY_WORD;
+    public static final int DEFAULT_EMBEDDING_CHUNKING_MAX_OVERLAP_SIZE = 0;
 
     @NonNull
     private final EmbeddingModel embeddingModel;

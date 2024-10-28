@@ -17,10 +17,13 @@ package com.amazonaws.datastreamvectorization.datasink.opensearch;
 
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchDataSinkConfiguration;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 import org.apache.flink.connector.opensearch.sink.OpensearchSink;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.Properties;
 
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.FlinkApplicationProperties.PROPERTY_OS_ENDPOINT;
@@ -38,7 +41,9 @@ class OpenSearchSinkBuilderTest {
         properties.setProperty(PROPERTY_OS_TYPE, OpenSearchType.SERVERLESS.name());
         OpenSearchDataSinkConfiguration testOSConfig = OpenSearchDataSinkConfiguration
                 .parseFrom("us-east-1", properties).build();
-        OpensearchSink<JSONObject> dataSink = new OpenSearchSinkBuilder().getDataSink(testOSConfig);
+        EmbeddingConfiguration testEmbedConfig = new EmbeddingConfiguration(
+                EmbeddingModel.AMAZON_TITAN_TEXT_V2.getModelId(), Collections.emptyMap());
+        OpensearchSink<JSONObject> dataSink = new OpenSearchSinkBuilder().getDataSink(testOSConfig, testEmbedConfig);
         assertNotNull(dataSink);
     }
 }

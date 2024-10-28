@@ -16,15 +16,17 @@
 package com.amazonaws.datastreamvectorization.embedding.generator;
 
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingInput;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.metrics.Gauge;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.streaming.api.functions.async.RichAsyncFunction;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -47,7 +49,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EMBED_INPUT_TEXT_KEY_NAME;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EMBED_OUTPUT_TIMESTAMP_KEY_NAME;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EmbeddingModelConfigurations.EMBEDDING_CONFIG;
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.EmbeddingModelConfigurations.OUTPUT_EMBEDDING_LENGTH;
@@ -147,7 +148,8 @@ public abstract class BedrockEmbeddingGenerator<IN, OUT> extends RichAsyncFuncti
      */
     JSONObject constructInputBody(@NonNull final String input) {
         JSONObject jsonBody = new JSONObject();
-        jsonBody.put(EMBED_INPUT_TEXT_KEY_NAME, input);
+        jsonBody.put(this.embeddingConfiguration.getEmbeddingModel().getInputKey(),
+                getEmbeddingInputFromString(input, this.embeddingConfiguration.getEmbeddingModel()));
 
         // Insert configs provided by client into the input body
         if (isNotEmpty(embeddingConfiguration.getEmbeddingModelOverrideConfig())) {
@@ -205,13 +207,13 @@ public abstract class BedrockEmbeddingGenerator<IN, OUT> extends RichAsyncFuncti
      * @param input input text to generate embedding for
      * @return JSONObject containing the embedding
      */
-    Optional<JSONObject> getEmbeddingJSON(String input) {
-        if (StringUtils.isEmpty(input)) {
+    Optional<JSONObject> getEmbeddingJSON(EmbeddingInput input) {
+        if (input.isEmpty()) {
             log.info("Received empty input. Skipping embedding generation.");
             return Optional.empty();
         }
-        log.info("Embedding raw message: {}", input);
-        JSONObject jsonBody = constructInputBody(input);
+        log.info("Embedding raw message: {}", input.getStringToEmbed());
+        JSONObject jsonBody = constructInputBody(input.getStringToEmbed());
         log.info("Constructed JSON input body for Bedrock embedding: {}", jsonBody);
         Charset charset = Charset.forName(embeddingConfiguration.getCharset());
         SdkBytes body = SdkBytes.fromString(jsonBody.toString(), charset);
@@ -284,5 +286,22 @@ public abstract class BedrockEmbeddingGenerator<IN, OUT> extends RichAsyncFuncti
                 .addGroup(METRIC_GROUP_KINESIS_ANALYTICS)
                 .addGroup(METRIC_GROUP_KEY_SERVICE, METRIC_GROUP_VALUE_SERVICE)
                 .addGroup(METRIC_GROUP_KEY_OPERATION, METRIC_GROUP_VALUE_OPERATION);
+    }
+
+    /**
+     * Get the object expected to be the embedding input based on the embedding model.
+     * For models with input type array, a single element array with the embedding input string is created.
+     *
+     * @param embeddingInput String to be embedded
+     * @param embeddingModel Bedrock model to use to create the embedding
+     * @return Embedding input object of the type the model is expecting
+     */
+    public Object getEmbeddingInputFromString(String embeddingInput, EmbeddingModel embeddingModel) {
+        if (embeddingModel.getInputType().equals(JSONArray.class)) {
+            JSONArray jsonArray = new JSONArray();
+            jsonArray.put(embeddingInput);
+            return jsonArray;
+        }
+        return embeddingInput;
     }
 }

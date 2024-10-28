@@ -15,6 +15,7 @@
 */
 package com.amazonaws.datastreamvectorization.datasink;
 
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingConfiguration;
 import lombok.NonNull;
 import org.apache.flink.api.connector.sink2.Sink;
 import org.json.JSONObject;
@@ -36,9 +37,10 @@ public class DataSinkFactory {
      * @return The data sink instance
      * @throws MissingOrIncorrectConfigurationException If the configuration is not supported
      */
-    public Sink<JSONObject> getDataSink(@NonNull final DataSinkConfiguration config) {
+    public Sink<JSONObject> getDataSink(@NonNull final DataSinkConfiguration config,
+                                        @NonNull final EmbeddingConfiguration embeddingConfig) {
         if (config instanceof OpenSearchDataSinkConfiguration) {
-            return new OpenSearchSinkBuilder().getDataSink((OpenSearchDataSinkConfiguration) config);
+            return new OpenSearchSinkBuilder().getDataSink((OpenSearchDataSinkConfiguration) config, embeddingConfig);
         }
         throw new MissingOrIncorrectConfigurationException("Unsupported data sink configuration");
     }

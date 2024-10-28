@@ -24,9 +24,16 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CommonConstants {
     public static final String PROPERTY_VALUES_DELIMITER = ",";
-    public static final String EMBED_OUTPUT_EMBEDDING = "embedding";
-    public static final String EMBED_INPUT_TEXT_KEY_NAME = "inputText";
+    public static final String EMBED_INPUT_ORIGINAL_TEXT_NAME = "originalText";
+    public static final String EMBED_INPUT_CHUNK_TEXT_NAME = "chunkText";
+    public static final String EMBED_INPUT_CHUNK_KEY_NAME = "chunkKey";
     public static final String EMBED_OUTPUT_TIMESTAMP_KEY_NAME = "@timestamp";
+
+    public static final String SINK_EMBEDDED_DATA_NAME = "embedded_data";
+    public static final String SINK_ORIGINAL_DATA_NAME = "original_data";
+    public static final String SINK_CHUNK_DATA_NAME = "chunk_data";
+    public static final String SINK_CHUNK_KEY_NAME = "chunk_key";
+    public static final String SINK_DATE_NAME = "date";
 
     public static final String METRIC_GROUP_KINESIS_ANALYTICS = "KinesisAnalytics";
     public static final String METRIC_GROUP_KEY_SERVICE = "Service";
@@ -55,6 +62,10 @@ public final class CommonConstants {
         public static final String PROPERTY_EMBEDDING_MODEL_OVERRIDES = "embed.model.overrides.";
         public static final String PROPERTY_EMBEDDING_INPUT_CONFIG = "embed.input.config.";
         public static final String PROPERTY_EMBEDDING_INPUT_JSON_FIELDS = "json.fieldsToEmbed";
+        public static final String PROPERTY_EMBEDDING_INPUT_JSON_STRICTNESS = "json.fieldsToEmbed.strictness";
+        public static final String PROPERTY_EMBEDDING_INPUT_CHUNKING_TYPE = "chunking.type";
+        public static final String PROPERTY_EMBEDDING_INPUT_CHUNKING_MAX_SIZE = "chunking.maxSegmentSizeInChars";
+        public static final String PROPERTY_EMBEDDING_INPUT_CHUNKING_MAX_OVERLAP = "chunking.maxOverlapSizeInChars";
 
         // Sink property name constants
         public static final String PROPERTY_OS_ENDPOINT = "sink.os.endpoint";

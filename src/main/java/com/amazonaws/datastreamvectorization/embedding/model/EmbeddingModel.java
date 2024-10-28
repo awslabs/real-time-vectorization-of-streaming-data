@@ -17,6 +17,7 @@ package com.amazonaws.datastreamvectorization.embedding.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.json.JSONArray;
 
 import java.util.Collections;
 import java.util.Map;
@@ -37,47 +38,64 @@ import static com.amazonaws.datastreamvectorization.constants.CommonConstants.Em
 @AllArgsConstructor
 public enum EmbeddingModel {
 
-    AMAZON_TITAN_TEXT_G1("amazon.titan-embed-text-v1",
-            Collections.emptyMap(), Collections.emptyMap()),
-    AMAZON_TITAN_TEXT_V2("amazon.titan-embed-text-v2:0",
+    AMAZON_TITAN_TEXT_G1("amazon.titan-embed-text-v1", "inputText", String.class, "embedding",
+            Collections.emptyMap(), Collections.emptyMap(), 50000),
+    AMAZON_TITAN_TEXT_V2("amazon.titan-embed-text-v2:0", "inputText", String.class, "embedding",
             Collections.emptyMap(),
             Map.of(NORMALIZE, Boolean.class,
                     DIMENSIONS, Integer.class
-    )),
-    AMAZON_TITAN_MULTIMODAL_G1("amazon.titan-embed-image-v1",
+    ), 50000),
+    AMAZON_TITAN_MULTIMODAL_G1("amazon.titan-embed-image-v1", "inputText", String.class, "embedding",
             Collections.emptyMap(), Map.of(
             OUTPUT_EMBEDDING_LENGTH, Integer.class
-    )),
+    ), 100000),
     /*
     For Cohere models, we add a default input_type since this is a required field. In search use-cases,
     search_document is used when you encode documents for embeddings that you store in a vector database.
     See: https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-embed.html
     */
-    COHERE_EMBED_ENGLISH("cohere.embed-english-v3",
+    COHERE_EMBED_ENGLISH("cohere.embed-english-v3", "texts", JSONArray.class, "embeddings",
             Map.of(INPUT_TYPE, INPUT_TYPE_SEARCH_DOCUMENT), Map.of(
             INPUT_TYPE, String.class,
             TRUNCATE, String.class,
             EMBEDDING_TYPES, String.class
-    )),
-    COHERE_EMBED_MULTILINGUAL("cohere.embed-multilingual-v3",
+    ), 2048),
+    COHERE_EMBED_MULTILINGUAL("cohere.embed-multilingual-v3", "texts", JSONArray.class, "embeddings",
             Map.of(INPUT_TYPE, INPUT_TYPE_SEARCH_DOCUMENT), Map.of(
             INPUT_TYPE, String.class,
             TRUNCATE, String.class,
             EMBEDDING_TYPES, String.class
-    ));
+    ), 2048);
 
     /**
      * Bedrock model ID.
      */
     private final String modelId;
+
+    /**
+     * Bedrock model input text key for request body and its type
+     */
+    private final String inputKey;
+    private final Class inputType;
+
+    /**
+     * Bedrock model embedding text key for response body
+     */
+    private final String embeddingKey;
+
     /**
      * Map of default configurations associated with the model.
      */
     private final Map<String, String> defaultConfigs;
 
     /**
-     * Lis of configuration keys and their expected data types that are supported by the model.
+     * Map of configuration keys and their expected data types that are supported by the model.
      * @see EmbeddingConfiguration
      */
     private final Map<String, Class> configurationKeyDataTypeMap;
+
+    /**
+     * Bedrock model max character limit of the text to embed in a request.
+     */
+    private final int modelMaxCharacterLimit;
 }

@@ -15,6 +15,7 @@
 */
 package com.amazonaws.datastreamvectorization.datasource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.json.JSONObject;
@@ -26,7 +27,6 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class JSONObjectDeserializationSchemaTest {
 
@@ -61,7 +61,7 @@ class JSONObjectDeserializationSchemaTest {
     @Test
     public void testFailureIntegrity_EmptyString() throws IOException {
         // deserialize json element
-        assertEquals("{}", schema.deserialize("".getBytes()).toString());
+        assertEquals("{}", schema.deserialize(StringUtils.EMPTY.getBytes()).toString());
     }
 
     @Test
