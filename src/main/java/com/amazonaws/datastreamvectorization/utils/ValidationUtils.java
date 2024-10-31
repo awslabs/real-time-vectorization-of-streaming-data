@@ -29,6 +29,7 @@ public class ValidationUtils {
 
     public static final Pattern VALID_URL_PATTERN =
             Pattern.compile("[-a-zA-Z0-9/@%._~&+$]+\\.[a-zA-Z]{2,6}\\b[-a-zA-Z0-9~/=+:?#_%&$(),]*");
+    private static final Pattern VALID_PROTOCOL_PATTERN = Pattern.compile("^((http|https)://).*");
     private static final Pattern VALID_HTTP_URL_PATTERN =
             Pattern.compile("((http|https)://)" + VALID_URL_PATTERN);
     public static final Pattern VALID_IP_PATTERN =
@@ -45,6 +46,17 @@ public class ValidationUtils {
             return false;
         }
         final Matcher matcher = VALID_HTTP_URL_PATTERN.matcher(url);
+        return matcher.matches();
+    }
+
+    /**
+     * Checks if a URL starts with a valid protocol
+     *
+     * @param url
+     * @return True if the URL starts with a valid protocol
+     */
+    public static boolean hasValidProtocol(final String url) {
+        final Matcher matcher = VALID_PROTOCOL_PATTERN.matcher(url);
         return matcher.matches();
     }
 }

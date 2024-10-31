@@ -26,7 +26,7 @@ class ValidationUtilsTest {
 
     @ParameterizedTest
     @ValueSource(strings = {StringUtils.EMPTY, "  ", "urn:some:uri:1.2.3", "telnet://aws.jam", "https:amazon.com", "https::amazon.com",
-            "ftp://amazon.com"})
+            "ftp://amazon.com", "https://", "http://", "http://abc"})
     void isValidUrl_ShouldReturnFalse(String input) {
         assertFalse(ValidationUtils.isValidUrl(input));
     }
@@ -37,5 +37,23 @@ class ValidationUtilsTest {
             "https://dashboards.us-east-1.aoss.amazonaws.com/_login/?collectionId=ad77zixjklwz3asd0dti"})
     void isValidUrl_ShouldReturnTrue(String input) {
         assertTrue(ValidationUtils.isValidUrl(input));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"htt://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com",
+            "http:/vpc-test-7a27u4iagoq5cthd2m6upmenlu.us-east-1.es.amazonaws.com",
+            "abc", "https//vpc-test-7a27u4iagoq5cthd2m6upmenlu.us-east-1.es.amazonaws.com",
+            "ahttps://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com", ""})
+    void hasValidProtocol_ShouldReturnFalse(String input) {
+        assertFalse(ValidationUtils.hasValidProtocol(input));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com",
+            "http://vpc-test-7a27u4iagoq5cthd2m6upmenlu.us-east-1.es.amazonaws.com",
+            "https:///ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com",
+            "https://", "http://", "http://abc"})
+    void hasValidProtocol_ShouldReturnTrue(String input) {
+        assertTrue(ValidationUtils.hasValidProtocol(input));
     }
 }
