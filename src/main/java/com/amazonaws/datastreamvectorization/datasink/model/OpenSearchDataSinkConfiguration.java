@@ -20,6 +20,7 @@ import com.amazonaws.datastreamvectorization.utils.ConfigurationUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Properties;
 
@@ -29,15 +30,18 @@ import static com.amazonaws.datastreamvectorization.constants.CommonConstants.Fl
 import static com.amazonaws.datastreamvectorization.constants.CommonConstants.FlinkApplicationProperties.PROPERTY_OS_TYPE;
 import static com.amazonaws.datastreamvectorization.utils.DataSinkValidationUtils.isValidOpenSearchIndexName;
 import static com.amazonaws.datastreamvectorization.utils.DataSinkValidationUtils.validateFlushInterval;
+import static com.amazonaws.datastreamvectorization.utils.ValidationUtils.hasValidProtocol;
 import static com.amazonaws.datastreamvectorization.utils.ValidationUtils.isValidUrl;
 
 /**
  * Configuration for OpenSearch data sink.
  */
+@Slf4j
 @Data
 @Builder(builderMethodName = "internalBuilder")
 public class OpenSearchDataSinkConfiguration implements DataSinkConfiguration {
     public static final long DEFAULT_OS_BULK_FLUSH_INTERVAL_MILLIS = 1;
+    public static final String DEFAULT_ENDPOINT_PROTOCOL = "https://";
 
     @NonNull
     private String endpoint;
@@ -53,12 +57,23 @@ public class OpenSearchDataSinkConfiguration implements DataSinkConfiguration {
         validateFlushInterval(properties);
         return internalBuilder()
                 .region(region)
-                .endpoint(properties.getProperty(PROPERTY_OS_ENDPOINT))
+                .endpoint(getEndpoint(properties))
                 .index(properties.getProperty(PROPERTY_OS_INDEX))
                 .openSearchType(ConfigurationUtils.getRequiredEnum(OpenSearchType.class,
                         properties.getProperty(PROPERTY_OS_TYPE)))
                 .bulkFlushIntervalMillis(Long.parseLong(properties.getProperty(PROPERTY_OS_BULK_FLUSH_INTERVAL_MILLIS,
                         String.valueOf(DEFAULT_OS_BULK_FLUSH_INTERVAL_MILLIS))));
+    }
+
+    private static String getEndpoint(Properties properties) {
+        String endpointUrl = properties.getProperty(PROPERTY_OS_ENDPOINT);
+        if (!hasValidProtocol(endpointUrl)) {
+            String newEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + endpointUrl;
+            log.info("Provided OpenSearch endpoint {} does not start with a protocol. Adding {} to the start of "
+                    + "the OpenSearch endpoint URL: {}", endpointUrl, DEFAULT_ENDPOINT_PROTOCOL, newEndpointUrl);
+            return newEndpointUrl;
+        }
+        return endpointUrl;
     }
 
     /**

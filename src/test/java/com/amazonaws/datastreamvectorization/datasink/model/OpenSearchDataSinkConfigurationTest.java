@@ -52,6 +52,28 @@ class OpenSearchDataSinkConfigurationTest {
                 "OpenSearch index name is invalid."));
     }
 
+    private static Stream<Arguments> provideTestProtocolValidConfigurations() {
+        return Stream.of(
+                Arguments.of(
+                "https://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com",
+                        "https://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com"),
+                Arguments.of("ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com",
+                        "https://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com"),
+                Arguments.of("http://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com",
+                        "http://ad77zixjklwz3asd0dti.us-east-1.aoss.amazonaws.com")
+                );
+    }
+
+    private static Stream<Arguments> provideTestProtocolInvalidConfigurations() {
+        return Stream.of(
+                Arguments.of(
+                        "http:/vpc-test-7a27u4iagoq5cthd2m6upmenlu.us-east-1.es.amazonaws.com",
+                        "https://http:/vpc-test-7a27u4iagoq5cthd2m6upmenlu.us-east-1.es.amazonaws.com"),
+                Arguments.of("", "https://"),
+                Arguments.of("abc", "https://abc")
+        );
+    }
+
     private static Stream<Arguments> provideValidConfigurations() {
         return Stream.of(Arguments.of(OpenSearchDataSinkConfiguration
                 .parseFrom("us-east-1", provideValidPropertiesMap()).build()));
@@ -67,6 +89,35 @@ class OpenSearchDataSinkConfigurationTest {
     @ParameterizedTest
     @MethodSource("provideValidConfigurations")
     void validate_SuccessOnValidConfig(OpenSearchDataSinkConfiguration config) {
+        config.validate();
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTestProtocolInvalidConfigurations")
+    void validate_ThrowsOnTestProtocolInvalidConfig(String inputEndpointUrl, String expectedEndpointUrl) {
+        Properties properties = new Properties();
+        properties.setProperty(PROPERTY_OS_ENDPOINT, inputEndpointUrl);
+        properties.setProperty(PROPERTY_OS_INDEX, "index");
+        properties.setProperty(PROPERTY_OS_TYPE, OpenSearchType.SERVERLESS.name());
+
+        OpenSearchDataSinkConfiguration config = OpenSearchDataSinkConfiguration
+                .parseFrom("us-east-1", properties).build();
+        assertEquals(config.getEndpoint(), expectedEndpointUrl);
+        Exception exception = assertThrows(MissingOrIncorrectConfigurationException.class, config::validate);
+        assertEquals("OpenSearch endpoint should be a valid url.", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTestProtocolValidConfigurations")
+    void validate_SuccessOnTestProtocolValidConfig(String inputEndpointUrl, String expectedEndpointUrl) {
+        Properties properties = new Properties();
+        properties.setProperty(PROPERTY_OS_ENDPOINT, inputEndpointUrl);
+        properties.setProperty(PROPERTY_OS_INDEX, "index");
+        properties.setProperty(PROPERTY_OS_TYPE, OpenSearchType.SERVERLESS.name());
+
+        OpenSearchDataSinkConfiguration config = OpenSearchDataSinkConfiguration
+                .parseFrom("us-east-1", properties).build();
+        assertEquals(config.getEndpoint(), expectedEndpointUrl);
         config.validate();
     }
 }

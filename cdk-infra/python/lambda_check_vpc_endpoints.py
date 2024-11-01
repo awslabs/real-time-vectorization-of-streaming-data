@@ -47,6 +47,17 @@ def handler(event, context):
                 cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData=responseData)
 
             elif (endpointType == "OPENSEARCH-PROVISIONED"):
+                domainName = props["domainName"]
+                in_vpc = check_opensearch_provisioned_in_vpc(domainName)
+                if not in_vpc:
+                    print("OpenSearch provisioned domain is public and not in a VPC. Not creating VPC endpoints.")
+                    responseData = {
+                        "HasExistingVpcEndpoints": str(False),
+                        "CreatedVpcEndpoints": str(False),
+                        "VpcEndpointId": "Not applicable. This OpenSearch domain is public and not in a VPC."
+                    }
+                    cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData=responseData)
+                    return
                 exists, vpce_id = check_opensearch_provisioned_vpc_endpoint(vpc_endpoints, vpcId, subnetIds, securityGroups)
                 print("Opensearch provisioned VPC endpoint(s) already exists: " + str(exists))
                 responseData = {
@@ -55,7 +66,6 @@ def handler(event, context):
                     "VpcEndpointId": vpce_id
                 }
                 if createIfNotExists and not exists:
-                    domainName = props["domainName"]
                     createResponse = create_opensearch_provisioned_endpoint(domainName, subnetIds, securityGroups)
                     print("Created Opensearch provisioned VPC endpoint response: " + str(createResponse))
                     responseData["CreatedVpcEndpoints"] = str(True)
@@ -176,3 +186,9 @@ def create_opensearch_provisioned_endpoint(domainName, subnetIds, securityGroups
             'SecurityGroupIds': securityGroups
         })
     return vpcEndpoint
+
+def check_opensearch_provisioned_in_vpc(domainName):
+    osClient = boto3.client("opensearch")
+    domainResponse = osClient.describe_domain(DomainName=domainName)
+    domainStatus = domainResponse["DomainStatus"]
+    return "VPCOptions" in domainStatus
