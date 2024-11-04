@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +52,7 @@ import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 public class EmbeddingConfiguration implements Serializable {
     public static final int DEFAULT_EMBEDDING_ASYNC_TIMEOUT = 15000;
     public static final TimeUnit DEFAULT_EMBEDDING_ASYNC_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
+    public static final List<String> SUPPORTED_EMBEDDING_CHARSETS = List.of("UTF-8", "US-ASCII", "ISO-8859-1");
     public static final int DEFAULT_EMBEDDING_ASYNC_MAX_IO = 1000;
     public static final String DEFAULT_EMBEDDING_CHARSET = "UTF-8";
     public static final ChunkingType DEFAULT_EMBEDDING_CHUNKING_TYPE = ChunkingType.SPLIT_BY_WORD;
@@ -119,8 +121,9 @@ public class EmbeddingConfiguration implements Serializable {
         if (isEmpty(this.charset)) {
             throw new MissingOrIncorrectConfigurationException("Input stream Charset is required.");
         }
-        if (!Charset.isSupported(this.charset)) {
-            throw new MissingOrIncorrectConfigurationException("Input stream Charset is not supported.");
+        if (!Charset.isSupported(this.charset) || !SUPPORTED_EMBEDDING_CHARSETS.contains(this.charset)) {
+            throw new MissingOrIncorrectConfigurationException("Input stream Charset is not supported. "
+                    + "Supported Charsets are: " + String.join(", ", SUPPORTED_EMBEDDING_CHARSETS));
         }
     }
 
