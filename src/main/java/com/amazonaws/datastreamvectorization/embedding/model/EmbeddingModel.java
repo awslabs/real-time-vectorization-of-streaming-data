@@ -39,16 +39,16 @@ import static com.amazonaws.datastreamvectorization.constants.CommonConstants.Em
 public enum EmbeddingModel {
 
     AMAZON_TITAN_TEXT_G1("amazon.titan-embed-text-v1", "inputText", String.class, "embedding",
-            Collections.emptyMap(), Collections.emptyMap(), 50000),
+            Collections.emptyMap(), Collections.emptyMap(), 50000, 16000),
     AMAZON_TITAN_TEXT_V2("amazon.titan-embed-text-v2:0", "inputText", String.class, "embedding",
             Collections.emptyMap(),
             Map.of(NORMALIZE, Boolean.class,
                     DIMENSIONS, Integer.class
-    ), 50000),
+    ), 50000, 16000),
     AMAZON_TITAN_MULTIMODAL_G1("amazon.titan-embed-image-v1", "inputText", String.class, "embedding",
             Collections.emptyMap(), Map.of(
             OUTPUT_EMBEDDING_LENGTH, Integer.class
-    ), 100000),
+    ), 100000, 50000),
     /*
     For Cohere models, we add a default input_type since this is a required field. In search use-cases,
     search_document is used when you encode documents for embeddings that you store in a vector database.
@@ -59,13 +59,13 @@ public enum EmbeddingModel {
             INPUT_TYPE, String.class,
             TRUNCATE, String.class,
             EMBEDDING_TYPES, String.class
-    ), 2048),
+    ), 2048, 1000),
     COHERE_EMBED_MULTILINGUAL("cohere.embed-multilingual-v3", "texts", JSONArray.class, "embeddings",
             Map.of(INPUT_TYPE, INPUT_TYPE_SEARCH_DOCUMENT), Map.of(
             INPUT_TYPE, String.class,
             TRUNCATE, String.class,
             EMBEDDING_TYPES, String.class
-    ), 2048);
+    ), 2048, 1000);
 
     /**
      * Bedrock model ID.
@@ -98,4 +98,9 @@ public enum EmbeddingModel {
      * Bedrock model max character limit of the text to embed in a request.
      */
     private final int modelMaxCharacterLimit;
+
+    /**
+     * Bedrock model default character limit of the text to embed in a request.
+     */
+    private final int modelDefaultCharacterLimit;
 }
