@@ -212,7 +212,8 @@ public class EmbeddingConfigurationTest {
                                     , PROPERTY_EMBEDDING_CHARSET, "xyz")
                     ).getProperties())
                             .build(),
-                            "Input stream Charset is not supported."}};
+                            "Input stream Charset is not supported. Supported Charsets are: "
+                                    + String.join(", ", EmbeddingConfiguration.SUPPORTED_EMBEDDING_CHARSETS)}};
             return Arrays.asList(data);
         }
 
