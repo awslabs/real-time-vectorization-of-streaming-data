@@ -206,10 +206,11 @@ public class PropertiesUtils {
             }
             return chunkingMaxSegmentSize;
         }
-        log.info("Did not find {} in config. Setting it to default value {}",
+        log.info("Did not find {} in config. Setting it to default value {} for the model {}",
                 PROPERTY_EMBEDDING_INPUT_CHUNKING_MAX_SIZE,
-                embeddingConfig.getEmbeddingModel().getModelMaxCharacterLimit());
-        return embeddingConfig.getEmbeddingModel().getModelMaxCharacterLimit();
+                embeddingConfig.getEmbeddingModel().getModelDefaultCharacterLimit(),
+                embeddingConfig.getEmbeddingModel().getModelId());
+        return embeddingConfig.getEmbeddingModel().getModelDefaultCharacterLimit();
     }
 
     public static int getChunkingMaxOverlapSize(EmbeddingConfiguration embeddingConfig) {
@@ -270,6 +271,6 @@ public class PropertiesUtils {
         if (OVERRIDE_VALUES_TO_VALIDATIONS_MAP.containsKey(configName)) {
             return OVERRIDE_VALUES_TO_VALIDATIONS_MAP.get(configName).stream().anyMatch(v -> v.equals(configValue));
         }
-         return true;
+        return true;
     }
 }
