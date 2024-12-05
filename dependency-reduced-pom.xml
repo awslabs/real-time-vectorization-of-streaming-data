@@ -50,6 +50,34 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+        <configuration>
+          <skipTests>${skipUTs}</skipTests>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.5.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <skipITs>${skipITs}</skipITs>
+          <systemProperties>
+            <property>
+              <name>integTestInputsFileName</name>
+              <value>${integTestInputsFileName}</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
         <configuration>
@@ -423,13 +451,16 @@
     <scala.binary.version>2.12</scala.binary.version>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
+    <skipUTs>false</skipUTs>
     <flink.version>1.18.1</flink.version>
     <maven.compiler.target>${target.java.version}</maven.compiler.target>
     <aws.java.sdk.version>2.25.52</aws.java.sdk.version>
     <testcontainers.version>1.17.6</testcontainers.version>
     <maven.build.timestamp.format>yyyy-MM-dd-HH-mm</maven.build.timestamp.format>
+    <skipITs>true</skipITs>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j.version>2.17.1</log4j.version>
+    <integTestInputsFileName>integ-test-inputs.json</integTestInputsFileName>
     <target.java.version>11</target.java.version>
     <kda.runtime.version>1.2.0</kda.runtime.version>
   </properties>

@@ -40,7 +40,9 @@ under the License.
 		<log4j.version>2.17.1</log4j.version>
 		<aws.java.sdk.version>2.25.52</aws.java.sdk.version>
 		<maven.build.timestamp.format>yyyy-MM-dd-HH-mm</maven.build.timestamp.format>
-
+		<skipUTs>false</skipUTs>
+		<skipITs>true</skipITs>
+		<integTestInputsFileName>integ-test-inputs.json</integTestInputsFileName>
 	</properties>
 
 	<dependencies>
@@ -236,11 +238,40 @@ under the License.
 		</dependency>
 	</dependencies>
 
-
 	<build>
 <!--		uncomment for generating JAR with timestamp  -->
 <!--		<finalName>${project.artifactId}-${maven.build.timestamp}-${project.version}</finalName>-->
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.5.2</version>
+				<configuration>
+					<skipTests>${skipUTs}</skipTests>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.5.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<skipITs>${skipITs}</skipITs>
+					<systemProperties>
+						<property>
+							<name>integTestInputsFileName</name>
+							<value>${integTestInputsFileName}</value>
+						</property>
+					</systemProperties>
+				</configuration>
+			</plugin>
 			<!-- Java Compiler -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

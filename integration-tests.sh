@@ -1,0 +1,1 @@
+mvn clean verify -DskipUTs=true -DskipITs=false -DfileName="integ-test-inputs.json"
