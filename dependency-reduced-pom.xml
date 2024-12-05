@@ -50,6 +50,38 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+        <configuration>
+          <skipTests>${skipUTs}</skipTests>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.5.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <skipITs>${skipITs}</skipITs>
+          <systemProperties>
+            <property>
+              <name>integTestInputsFile</name>
+              <value>${integTestInputsFile}</value>
+            </property>
+            <property>
+              <name>blueprintCDKTemplateURL</name>
+              <value>${blueprintCDKTemplateURL}</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
         <configuration>
@@ -422,12 +454,16 @@
   <properties>
     <scala.binary.version>2.12</scala.binary.version>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
+    <blueprintCDKTemplateURL>BootstrapCdkStack.template.json</blueprintCDKTemplateURL>
+    <integTestInputsFile>integ-test-inputs.json</integTestInputsFile>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
+    <skipUTs>false</skipUTs>
     <flink.version>1.18.1</flink.version>
     <maven.compiler.target>${target.java.version}</maven.compiler.target>
     <aws.java.sdk.version>2.25.52</aws.java.sdk.version>
     <testcontainers.version>1.17.6</testcontainers.version>
     <maven.build.timestamp.format>yyyy-MM-dd-HH-mm</maven.build.timestamp.format>
+    <skipITs>true</skipITs>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j.version>2.17.1</log4j.version>
     <target.java.version>11</target.java.version>

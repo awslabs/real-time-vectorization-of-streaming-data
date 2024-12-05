@@ -84,7 +84,7 @@ public class OpenSearchSinkBuilder {
                 .source(json, XContentType.JSON);
     }
 
-    private static RestClientFactory getRestClientFactory(String service, String region) {
+    public static RestClientFactory getRestClientFactory(String service, String region) {
         return (restClientBuilder, restClientConfig) -> {
             HttpRequestInterceptor interceptor = new AwsRequestSigningApacheInterceptor(
                     service,
