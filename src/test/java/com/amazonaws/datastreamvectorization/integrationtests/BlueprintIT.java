@@ -60,7 +60,7 @@ class BlueprintIT {
         GetBootstrapBrokersRequest request = new GetBootstrapBrokersRequest();
         GetBootstrapBrokersResult bookstrapBrokersResult = mskClient.getBootstrapBrokers(request.withClusterArn(mskClusterArn));
         System.out.println("MSK cluster bootstrap server result: " + bookstrapBrokersResult);
-        String mskClusterBootstrapBrokerString = bookstrapBrokersResult.getBootstrapBrokerString();
+        String mskClusterBootstrapBrokerString = bookstrapBrokersResult.getBootstrapBrokerStringSaslIam();
         System.out.println("MSK cluster bootstrap server string: " + mskClusterBootstrapBrokerString);
 
         // TODO: prototype creating a topic on the MSK cluster
