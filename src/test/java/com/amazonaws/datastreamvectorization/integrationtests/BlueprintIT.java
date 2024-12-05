@@ -59,8 +59,9 @@ class BlueprintIT {
         AWSKafka mskClient = AWSKafkaClientBuilder.defaultClient();
         GetBootstrapBrokersRequest request = new GetBootstrapBrokersRequest();
         GetBootstrapBrokersResult bookstrapBrokersResult = mskClient.getBootstrapBrokers(request.withClusterArn(mskClusterArn));
+        System.out.println("MSK cluster bootstrap server result: " + bookstrapBrokersResult);
         String mskClusterBootstrapBrokerString = bookstrapBrokersResult.getBootstrapBrokerString();
-        System.out.println("MSK cluster bootstrap server: " + mskClusterBootstrapBrokerString);
+        System.out.println("MSK cluster bootstrap server string: " + mskClusterBootstrapBrokerString);
 
         // TODO: prototype creating a topic on the MSK cluster
         System.out.println("AT STEP: prototype creating a topic on the MSK cluster");
@@ -69,9 +70,9 @@ class BlueprintIT {
         AdminClient adminClient = kafkaClients.createKafkaAdminClient();
         adminClient.createTopics(List.of(new NewTopic(mskTestTopicName, 3, (short) 3)));
 
-        // TODO: prototype deploying blueprint stack
-
         // TODO: prototype creating an index in the OpenSearch cluster
+
+        // TODO: prototype deploying blueprint stack
 
         // TODO: prototype adding blueprint IAM role as OpenSearch master user
 
