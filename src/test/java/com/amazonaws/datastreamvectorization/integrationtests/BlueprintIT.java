@@ -19,8 +19,19 @@ import com.amazonaws.services.kafka.AWSKafka;
 import com.amazonaws.services.kafka.AWSKafkaClientBuilder;
 import com.amazonaws.services.kafka.model.GetBootstrapBrokersRequest;
 import com.amazonaws.services.kafka.model.GetBootstrapBrokersResult;
+import com.amazonaws.services.opensearch.AmazonOpenSearch;
+import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
+import com.amazonaws.services.opensearch.model.DescribeDomainRequest;
+import com.amazonaws.services.opensearch.model.DescribeDomainResult;
+
+import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
+import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClient;
+import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
+import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionRequest;
+import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionResult;
 import org.apache.commons.io.IOUtils;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 import org.json.JSONObject;
 
@@ -57,8 +69,8 @@ class BlueprintIT {
         JSONObject mskServerlessPrivateVPC = (JSONObject) testInputJson.get("MSKServerlessPrivateVPC");
         String mskClusterArn = (String) mskServerlessPrivateVPC.get("MSKClusterArn");
         AWSKafka mskClient = AWSKafkaClientBuilder.defaultClient();
-        GetBootstrapBrokersRequest request = new GetBootstrapBrokersRequest();
-        GetBootstrapBrokersResult bookstrapBrokersResult = mskClient.getBootstrapBrokers(request.withClusterArn(mskClusterArn));
+        GetBootstrapBrokersRequest bookstrapBrokersRequest = new GetBootstrapBrokersRequest();
+        GetBootstrapBrokersResult bookstrapBrokersResult = mskClient.getBootstrapBrokers(bookstrapBrokersRequest.withClusterArn(mskClusterArn));
         System.out.println("MSK cluster bootstrap server result: " + bookstrapBrokersResult);
         String mskClusterBootstrapBrokerString = bookstrapBrokersResult.getBootstrapBrokerStringSaslIam();
         System.out.println("MSK cluster bootstrap server string: " + mskClusterBootstrapBrokerString);
@@ -68,7 +80,28 @@ class BlueprintIT {
         String mskTestTopicName = "nexus-integ-test-topic-" + currentTimestamp;
         KafkaClients kafkaClients = new KafkaClients(mskClusterBootstrapBrokerString);
         AdminClient adminClient = kafkaClients.createKafkaAdminClient();
-        adminClient.createTopics(List.of(new NewTopic(mskTestTopicName, 3, (short) 3)));
+        CreateTopicsResult createTopicsResult = adminClient.createTopics(List.of(new NewTopic(mskTestTopicName, 3, (short) 3)));
+        System.out.println(createTopicsResult);
+
+        // TODO: prototype get OpenSearch cluster info
+        System.out.println("AT STEP: prototype get OpenSearch cluster info");
+//        JSONObject openSearchCluster = (JSONObject) testInputJson.get("OpenSearchCluster");
+//        String openSearchClusterName = (String) openSearchCluster.get("Name");
+//        String openSearchClusterType = (String) openSearchCluster.get("Type");
+//        if (openSearchClusterType.equals("PROVISIONED")) {
+//            AmazonOpenSearch opensearchClient = AmazonOpenSearchClientBuilder.defaultClient();
+//            DescribeDomainRequest describeDomainRequest = new DescribeDomainRequest().withDomainName(openSearchClusterName);
+//            DescribeDomainResult describeDomainResult = opensearchClient.describeDomain(describeDomainRequest);
+//
+//        } else if (openSearchClusterType.equals("SERVERLESS")) {
+//            AWSOpenSearchServerless openSearchClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
+//            BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(openSearchClusterName));
+//            BatchGetCollectionResult batchGetCollectionResult = openSearchClient.batchGetCollection(batchGetCollectionRequest);
+//
+//        } else {
+//            throw new RuntimeException("Unexpected OpenSearch cluster type " + openSearchClusterType +
+//                    ". Cluster type must be PROVISIONED or SERVERLESS");
+//        }
 
         // TODO: prototype creating an index in the OpenSearch cluster
 
