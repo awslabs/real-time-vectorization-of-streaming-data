@@ -47,8 +47,8 @@ public class MSKHelper {
             mskSecurityGroupIDs = provisionedClusterInfo.getBrokerNodeGroupInfo().getSecurityGroups();
             mskVpcId = this.getVpcIdFromSubnets(mskSubnetIDs);
         } else if (serverlessClusterInfo != null) {
-            mskSubnetIDs = serverlessClusterInfo.getVpcConfigs().getFirst().getSubnetIds();
-            mskSecurityGroupIDs = serverlessClusterInfo.getVpcConfigs().getFirst().getSecurityGroupIds();
+            mskSubnetIDs = serverlessClusterInfo.getVpcConfigs().get(0).getSubnetIds();
+            mskSecurityGroupIDs = serverlessClusterInfo.getVpcConfigs().get(0).getSecurityGroupIds();
             mskVpcId = this.getVpcIdFromSubnets(mskSubnetIDs);
         } else {
             throw new RuntimeException("MSK cluster not of type provisioned or serverless. " +

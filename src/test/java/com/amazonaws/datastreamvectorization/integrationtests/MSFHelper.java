@@ -23,4 +23,18 @@ public class MSFHelper {
                 .withForce(force);
         return this.msfClient.stopApplication(stopApplicationRequest);
     }
+
+    public UpdateApplicationResult updateApplication(String appName) {
+        DescribeApplicationRequest describeApplicationRequest = new DescribeApplicationRequest().withApplicationName(appName);
+        DescribeApplicationResult describeApplicationResult = this.msfClient.describeApplication(describeApplicationRequest);
+        String conditionalToken = describeApplicationResult.getApplicationDetail().getConditionalToken();
+
+        ApplicationConfigurationUpdate appConfigUpdate = new ApplicationConfigurationUpdate();
+
+        UpdateApplicationRequest updateApplicationRequest = new UpdateApplicationRequest()
+                .withApplicationName(appName)
+                .withConditionalToken(conditionalToken)
+                .withApplicationConfigurationUpdate(appConfigUpdate);
+        return this.msfClient.updateApplication(updateApplicationRequest);
+    }
 }
