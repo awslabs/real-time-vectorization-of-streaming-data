@@ -37,18 +37,23 @@ public class MSKHelper {
         String mskClusterName = clusterInfo.getClusterName();
 
         Provisioned provisionedClusterInfo = describeClusterV2Result.getClusterInfo().getProvisioned();
+        Serverless serverlessClusterInfo = describeClusterV2Result.getClusterInfo().getServerless();
+        List<String> mskSubnetIDs;
+        List<String> mskSecurityGroupIDs;
+        String mskVpcId;
 
-        List<String> mskSubnetIDs = provisionedClusterInfo.getBrokerNodeGroupInfo().getClientSubnets();
-        List<String> mskSecurityGroupIDs = provisionedClusterInfo.getBrokerNodeGroupInfo().getSecurityGroups();
-        String mskVpcId = this.getVpcIdFromSubnets(mskSubnetIDs);
-
-        // TODO: SERVERLESS version. Consider passing VPC information from the test inputs instead
-//        Serverless serverlessClusterInfo = describeClusterV2Result.getClusterInfo().getServerless();
-//
-//        List<String> mskSubnetIDs = serverlessClusterInfo.getVpcConfigs().getFirst().getSubnetIds();
-//        List<String> mskSecurityGroupIDs = serverlessClusterInfo.getVpcConfigs().getFirst().getSecurityGroupIds();
-//        String mskVpcId = this.getVpcIdFromSubnets(mskSubnetIDs);
-
+        if (provisionedClusterInfo != null) {
+            mskSubnetIDs = provisionedClusterInfo.getBrokerNodeGroupInfo().getClientSubnets();
+            mskSecurityGroupIDs = provisionedClusterInfo.getBrokerNodeGroupInfo().getSecurityGroups();
+            mskVpcId = this.getVpcIdFromSubnets(mskSubnetIDs);
+        } else if (serverlessClusterInfo != null) {
+            mskSubnetIDs = serverlessClusterInfo.getVpcConfigs().getFirst().getSubnetIds();
+            mskSecurityGroupIDs = serverlessClusterInfo.getVpcConfigs().getFirst().getSecurityGroupIds();
+            mskVpcId = this.getVpcIdFromSubnets(mskSubnetIDs);
+        } else {
+            throw new RuntimeException("MSK cluster not of type provisioned or serverless. " +
+                    "DescribeClusterV2Result for cluster " + mskClusterArn + "was: " + describeClusterV2Result);
+        }
 
         return MSKClusterData.builder()
                 .MSKClusterArn(mskClusterArn)
