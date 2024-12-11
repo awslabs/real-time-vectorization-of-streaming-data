@@ -123,7 +123,7 @@ public class CloudFormationHelper {
         if (stacks.size() != 1) {
             throw new RuntimeException("Expected number of stacks is 1, got: " + stacks.size());
         }
-        Stack stackToCleanup = stacks.getFirst();
+        Stack stackToCleanup = stacks.get(0);
 
         // TODO: get parameter describing OpenSearch cluster type, or take it in as input
 //        List<Parameter> parameters = stackToCleanup.();

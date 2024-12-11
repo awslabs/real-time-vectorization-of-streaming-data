@@ -69,6 +69,6 @@ public class MSKHelper {
         DescribeSubnetsRequest describeSubnetsRequest = new DescribeSubnetsRequest().withSubnetIds(subnetIds);
         DescribeSubnetsResult describeSubnetsResult = ec2Client.describeSubnets(describeSubnetsRequest);
         List<Subnet> subnets = describeSubnetsResult.getSubnets();
-        return subnets.getFirst().getVpcId(); // TODO: error handling if empty / not all subnets have same VPC
+        return subnets.get(0).getVpcId(); // TODO: error handling if empty / not all subnets have same VPC
     }
 }

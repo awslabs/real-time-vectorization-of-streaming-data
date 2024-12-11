@@ -35,7 +35,7 @@ public class OpenSearchHelper {
             BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));
             BatchGetCollectionResult batchGetCollectionResult = osServerlessClient.batchGetCollection(batchGetCollectionRequest);
             try {
-                openSearchEndpointURL = batchGetCollectionResult.getCollectionDetails().getFirst().getCollectionEndpoint();
+                openSearchEndpointURL = batchGetCollectionResult.getCollectionDetails().get(0).getCollectionEndpoint();
             } catch (NoSuchElementException e) {
                 throw new RuntimeException("Provided OpenSearch cluster " + osClusterName + " does not exist:", e);
             }
