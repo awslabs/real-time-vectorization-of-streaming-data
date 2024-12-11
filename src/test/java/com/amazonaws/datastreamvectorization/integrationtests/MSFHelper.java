@@ -3,6 +3,9 @@ package com.amazonaws.datastreamvectorization.integrationtests;
 import com.amazonaws.services.kinesisanalyticsv2.AmazonKinesisAnalyticsV2;
 import com.amazonaws.services.kinesisanalyticsv2.AmazonKinesisAnalyticsV2ClientBuilder;
 import com.amazonaws.services.kinesisanalyticsv2.model.*;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.CopyObjectRequest;
 
 public class MSFHelper {
 
@@ -12,19 +15,19 @@ public class MSFHelper {
         this.msfClient = AmazonKinesisAnalyticsV2ClientBuilder.defaultClient();
     }
 
-    public StartApplicationResult startApplication(String appName) {
+    public StartApplicationResult startMSFApp(String appName) {
         StartApplicationRequest startApplicationRequest = new StartApplicationRequest().withApplicationName(appName);
         return this.msfClient.startApplication(startApplicationRequest);
     }
 
-    public StopApplicationResult stopApplication(String appName, boolean force) {
+    public StopApplicationResult stopMSFApp(String appName, boolean force) {
         StopApplicationRequest stopApplicationRequest = new StopApplicationRequest()
                 .withApplicationName(appName)
                 .withForce(force);
         return this.msfClient.stopApplication(stopApplicationRequest);
     }
 
-    public UpdateApplicationResult updateApplication(String appName) {
+    private UpdateApplicationResult updateApplication(String appName, UpdateApplicationRequest updateAppRequest) {
         DescribeApplicationRequest describeApplicationRequest = new DescribeApplicationRequest().withApplicationName(appName);
         DescribeApplicationResult describeApplicationResult = this.msfClient.describeApplication(describeApplicationRequest);
         String conditionalToken = describeApplicationResult.getApplicationDetail().getConditionalToken();

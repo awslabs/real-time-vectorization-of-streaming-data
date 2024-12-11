@@ -92,9 +92,9 @@ class BlueprintIT {
 
         // TODO: prototype deploying blueprint stack
         System.out.println("AT STEP: prototype deploying blueprint stack");
-        String blueprintCDKTemplateFile = System.getProperty("blueprintCDKTemplateFile");
+        String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
         CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
-        cfnHelper.createBlueprintStack(blueprintCDKTemplateFile, mskClusterArn, openSearchClusterName, openSearchType);
+        cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
 
         // TODO: prototype adding blueprint IAM role as OpenSearch master user
 

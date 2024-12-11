@@ -43,7 +43,7 @@ under the License.
 		<skipUTs>false</skipUTs>
 		<skipITs>true</skipITs>
 		<integTestInputsFile>integ-test-inputs.json</integTestInputsFile>
-		<blueprintCDKTemplateFile>blueprintCDK.template.json</blueprintCDKTemplateFile>
+		<blueprintCDKTemplateURL>BootstrapCdkStack.template.json</blueprintCDKTemplateURL>
 	</properties>
 
 	<dependencies>
@@ -271,8 +271,8 @@ under the License.
 							<value>${integTestInputsFile}</value>
 						</property>
 						<property>
-							<name>blueprintCDKTemplateFile</name>
-							<value>${blueprintCDKTemplateFile}</value>
+							<name>blueprintCDKTemplateURL</name>
+							<value>${blueprintCDKTemplateURL}</value>
 						</property>
 					</systemProperties>
 				</configuration>

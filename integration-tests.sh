@@ -5,8 +5,8 @@ do
     case "${option}"
         in
         t)testConfigFile=${OPTARG};;
-        b)blueprintCDKTemplateFile=${OPTARG};;
+        b)blueprintCDKTemplateURL=${OPTARG};;
     esac
 done
 
-mvn clean verify -DskipUTs=true -DskipITs=false -DintegTestInputsFile=$testConfigFile -DblueprintCDKTemplateFile=$blueprintCDKTemplateFile
+mvn clean verify -DskipUTs=true -DskipITs=false -DintegTestInputsFile=$testConfigFile -DblueprintCDKTemplateURL=$blueprintCDKTemplateURL
