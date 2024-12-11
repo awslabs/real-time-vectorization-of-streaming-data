@@ -42,7 +42,8 @@ under the License.
 		<maven.build.timestamp.format>yyyy-MM-dd-HH-mm</maven.build.timestamp.format>
 		<skipUTs>false</skipUTs>
 		<skipITs>true</skipITs>
-		<integTestInputsFileName>integ-test-inputs.json</integTestInputsFileName>
+		<integTestInputsFile>integ-test-inputs.json</integTestInputsFile>
+		<blueprintCDKTemplateFile>blueprintCDK.template.json</blueprintCDKTemplateFile>
 	</properties>
 
 	<dependencies>
@@ -266,8 +267,12 @@ under the License.
 					<skipITs>${skipITs}</skipITs>
 					<systemProperties>
 						<property>
-							<name>integTestInputsFileName</name>
-							<value>${integTestInputsFileName}</value>
+							<name>integTestInputsFile</name>
+							<value>${integTestInputsFile}</value>
+						</property>
+						<property>
+							<name>blueprintCDKTemplateFile</name>
+							<value>${blueprintCDKTemplateFile}</value>
 						</property>
 					</systemProperties>
 				</configuration>
