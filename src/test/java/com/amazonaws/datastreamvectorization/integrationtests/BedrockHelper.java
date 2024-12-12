@@ -27,6 +27,8 @@ public class BedrockHelper {
     AmazonBedrock bedrockClient;
 
     public BedrockHelper() {
+        // TODO: investigate how to get below working to avoid INFO log (low priority, it's not even WARN):
+        //  {bedrock, us-east-1} was not found in region metadata, trying to construct an endpoint using the standard pattern for this region: 'bedrock.us-east-1.amazonaws.com'.
 //        String region = AmazonBedrockClientBuilder.standard().getRegion();
 //
 //        bedrockClient = AmazonBedrockClientBuilder
@@ -34,7 +36,6 @@ public class BedrockHelper {
 //                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("bedrock", region))
 //                .build();
         bedrockClient = AmazonBedrockClientBuilder.defaultClient();
-
     }
 
     public EmbeddingModel getSupportedEmbeddingModel() {

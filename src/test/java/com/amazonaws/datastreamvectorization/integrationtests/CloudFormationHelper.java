@@ -99,7 +99,7 @@ public class CloudFormationHelper {
 
     public CreateStackResult createBlueprintStack(String templateURL, String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
         String stackName = "datastream-vec-integ-test-" + testId;
-        String templateBody = "";
+//        String templateBody = "";
 //        try {
 //            InputStream is = new FileInputStream(templateFilePath);
 //            templateBody = IOUtils.toString(is, StandardCharsets.UTF_8);
@@ -107,6 +107,7 @@ public class CloudFormationHelper {
 //            throw new RuntimeException("Could not read blueprint CDK template file " + templateFilePath, e);
 //        }
 
+        System.out.println("Stack template URL: " + templateURL);
         List<Parameter> stackParameters = getBlueprintParameters(mskClusterArn, osClusterName, osClusterType);
 
         CreateStackRequest createStackRequest = new CreateStackRequest()
