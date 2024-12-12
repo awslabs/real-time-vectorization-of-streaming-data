@@ -77,6 +77,7 @@ public class CloudFormationHelper {
             new Parameter().withParameterKey("SinkType").withParameterValue("OPENSEARCH"),
             new Parameter().withParameterKey("MSKClusterName").withParameterValue(mskClusterData.MSKClusterName),
             new Parameter().withParameterKey("MSKClusterArn").withParameterValue(mskClusterData.MSKClusterArn),
+            new Parameter().withParameterKey("MSKClusterSubnetIds").withParameterValue(mskClusterData.MSKClusterSubnetIds),
             new Parameter().withParameterKey("MSKClusterSecurityGroupIds").withParameterValue(mskClusterData.MSKClusterSecurityGroupIds),
             new Parameter().withParameterKey("MSKTopics").withParameterValue(mskClusterData.MSKTopics),
             new Parameter().withParameterKey("MSKVpcId").withParameterValue(mskClusterData.MSKVpcId),

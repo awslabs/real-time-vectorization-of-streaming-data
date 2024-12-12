@@ -32,19 +32,29 @@ public class MSFHelper {
         return this.msfClient.stopApplication(stopApplicationRequest);
     }
 
-//    public UpdateApplicationResult updateMSFAppDefault(String appName) {
-//        ApplicationDetail appDetail = this.describeApplication(appName).getApplicationDetail();
-//        this.uploadMSFAppJarToS3(appDetail);
-//
-//        ApplicationConfigurationUpdate appConfigUpdate = new ApplicationConfigurationUpdate();
-//        appConfigUpdate.setApplicationCodeConfigurationUpdate(this.getAppCodeConfigUpdate());
-//
-//    }
-//
-//    public UpdateApplicationResult updateMSFAppCrossVPC(String appName, String msfAppJarS3Path, String osClusterName) {
-//        // TODO: update MSF app jar location
-//        //  update endpoint URL (only for crossVPC)
-//    }
+    public UpdateApplicationResult updateMSFAppDefault(String appName) {
+        ApplicationDetail appDetail = this.describeApplication(appName).getApplicationDetail();
+        this.uploadMSFAppJarToS3(appDetail);
+
+        ApplicationConfigurationUpdate appConfigUpdate = new ApplicationConfigurationUpdate();
+        appConfigUpdate.setApplicationCodeConfigurationUpdate(this.getAppCodeConfigUpdate());
+        return this.updateApplication(appName, appConfigUpdate);
+    }
+
+    public UpdateApplicationResult updateMSFAppCrossVPC(String appName) {
+        // TODO: update MSF app jar location
+        //  update endpoint URL (only for crossVPC)
+        ApplicationDetail appDetail = this.describeApplication(appName).getApplicationDetail();
+        this.uploadMSFAppJarToS3(appDetail);
+
+        ApplicationConfigurationUpdate appConfigUpdate = new ApplicationConfigurationUpdate();
+        appConfigUpdate.setApplicationCodeConfigurationUpdate(this.getAppCodeConfigUpdate());
+
+
+
+
+        return this.updateApplication(appName, appConfigUpdate);
+    }
 
     private ApplicationCodeConfigurationUpdate getAppCodeConfigUpdate() {
         ApplicationCodeConfigurationUpdate appCodeConfigUpdate = new ApplicationCodeConfigurationUpdate();
@@ -89,7 +99,7 @@ public class MSFHelper {
         return this.msfClient.describeApplication(describeApplicationRequest);
     }
 
-    private UpdateApplicationResult updateApplication(String appName, UpdateApplicationRequest updateAppRequest) {
+    private UpdateApplicationResult updateApplication(String appName, ApplicationConfigurationUpdate appConfigUpdate) {
         DescribeApplicationRequest describeApplicationRequest = new DescribeApplicationRequest().withApplicationName(appName);
         DescribeApplicationResult describeApplicationResult = this.msfClient.describeApplication(describeApplicationRequest);
         String conditionalToken = describeApplicationResult.getApplicationDetail().getConditionalToken();
@@ -100,8 +110,6 @@ public class MSFHelper {
                 .getCodeContentDescription()
                 .getS3ApplicationCodeLocationDescription()
                 .getBucketARN();
-
-        ApplicationConfigurationUpdate appConfigUpdate = new ApplicationConfigurationUpdate();
 
         UpdateApplicationRequest updateApplicationRequest = new UpdateApplicationRequest()
                 .withApplicationName(appName)
