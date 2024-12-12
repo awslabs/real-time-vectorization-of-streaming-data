@@ -35,7 +35,7 @@ public class CloudFormationHelper {
         this.testId = testId;
     }
 
-    private String buildStackAppName() {
+    public String buildStackAppName() {
         return "integ-test-app-" + testId;
     }
 
@@ -61,8 +61,8 @@ public class CloudFormationHelper {
         System.out.println("mskClusterData:");
         System.out.println(mskClusterData);
 
-        OpenSearchHelper osHelper = new OpenSearchHelper(testId);
-        OpenSearchClusterData osClusterData = osHelper.getOpenSearchClusterData(osClusterName, osClusterType);
+        OpenSearchHelper osHelper = new OpenSearchHelper();
+        OpenSearchClusterData osClusterData = osHelper.getOpenSearchClusterData(osClusterName, osClusterType, testId);
         System.out.println("osClusterData:");
         System.out.println(osClusterData);
 

@@ -1,5 +1,6 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
+import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.services.kinesisanalyticsv2.AmazonKinesisAnalyticsV2;
 import com.amazonaws.services.kinesisanalyticsv2.AmazonKinesisAnalyticsV2ClientBuilder;
 import com.amazonaws.services.kinesisanalyticsv2.model.*;
@@ -13,6 +14,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.amazonaws.datastreamvectorization.constants.CommonConstants.FlinkApplicationProperties.*;
+import static com.amazonaws.datastreamvectorization.wrappers.FlinkSetupProvider.APPLICATION_PROPERTIES_GROUP_NAME;
 import static java.util.Map.entry;
 
 public class MSFHelper {
@@ -47,17 +50,12 @@ public class MSFHelper {
     }
 
     public UpdateApplicationResult updateMSFAppCrossVPC(String appName) {
-        // TODO: update MSF app jar location
-        //  update endpoint URL (only for crossVPC)
         ApplicationDetail appDetail = this.describeApplication(appName).getApplicationDetail();
         this.uploadMSFAppJarToS3(appDetail);
 
         ApplicationConfigurationUpdate appConfigUpdate = new ApplicationConfigurationUpdate();
         appConfigUpdate.setApplicationCodeConfigurationUpdate(this.getAppCodeConfigUpdate());
-
-//        appConfigUpdate.setFlinkApplicationConfigurationUpdate(this.getCrossVpcFlinkAppConfigUpdate());
-//        appConfigUpdate.setEnvironmentPropertyUpdates();
-
+        appConfigUpdate.setEnvironmentPropertyUpdates(this.getCrossVpcFlinkAppConfigUpdate(appDetail));
 
         return this.updateApplication(appName, appConfigUpdate);
     }
@@ -70,35 +68,44 @@ public class MSFHelper {
         return appCodeConfigUpdate;
     }
 
-//    private FlinkApplicationConfigurationUpdate getCrossVpcFlinkAppConfigUpdate() {
-//        EnvironmentPropertyUpdates flinkAppConfigUpdate = new EnvironmentPropertyUpdates();
-//
-//        String crossVpcEndpoint = "";
-//        ApplicationDetail appDetail = this.describeApplication(appName).getApplicationDetail();
-//        List<PropertyGroup> propertyGroups = appDetail
-//                .getApplicationConfigurationDescription()
-//                .getEnvironmentPropertyDescriptions()
-//                .getPropertyGroupDescriptions();
-//
-//
-//
-//        for (PropertyGroup group : propertyGroups) {
-//            if (group.getPropertyGroupId().equals("FlinkApplicationProperties")) {
-//                flinkAppConfigUpdate
-//                        break;
-//            }
-//        }
-//
-//        Map<String, String> runtimePropertiesMap = Map.ofEntries(entry("sink.os.endpoint",crossVpcEndpoint));
-//
-//        PropertyGroup propertyGroup = new PropertyGroup();
-//        propertyGroup.setPropertyGroupId("FlinkApplicationProperties");
-//        propertyGroup.setPropertyMap();
-//        List<PropertyGroup> propertyGroups = List.of(new PropertyGroup());
-//        flinkAppConfigUpdate.setPropertyGroups(propertyGroups);
-//
-//        return flinkAppConfigUpdate;
-//    }
+    private EnvironmentPropertyUpdates getCrossVpcFlinkAppConfigUpdate(ApplicationDetail appDetail) {
+        EnvironmentPropertyUpdates envPropertyUpdates = new EnvironmentPropertyUpdates();
+
+        List<PropertyGroup> propertyGroups = appDetail
+                .getApplicationConfigurationDescription()
+                .getEnvironmentPropertyDescriptions()
+                .getPropertyGroupDescriptions();
+
+        String msfAppVpcId = appDetail.getApplicationConfigurationDescription()
+                .getVpcConfigurationDescriptions()
+                .get(0).getVpcId();
+
+        String osClusterName = "";
+        String osClusterType = "";
+
+        for (PropertyGroup group : propertyGroups) {
+            if (group.getPropertyGroupId().equals(APPLICATION_PROPERTIES_GROUP_NAME)) {
+                Map<String, String> propertyMap = group.getPropertyMap();
+                osClusterName = propertyMap.get(PROPERTY_OS_NAME);
+                osClusterType = propertyMap.get(PROPERTY_OS_TYPE);
+                break;
+            }
+        }
+
+        OpenSearchHelper openSearchHelper = new OpenSearchHelper();
+        String crossVpcEndpointURL = openSearchHelper.getCrossVpcEndpoint(osClusterName,
+                OpenSearchType.valueOf(osClusterType), msfAppVpcId);
+
+        Map<String, String> runtimePropertiesMap = Map.ofEntries(entry(PROPERTY_OS_ENDPOINT, crossVpcEndpointURL));
+
+        PropertyGroup propertyGroup = new PropertyGroup();
+        propertyGroup.setPropertyGroupId(APPLICATION_PROPERTIES_GROUP_NAME);
+        propertyGroup.setPropertyMap(runtimePropertiesMap);
+        List<PropertyGroup> propertyGroupsUpdate = List.of(new PropertyGroup());
+        envPropertyUpdates.setPropertyGroups(propertyGroupsUpdate);
+
+        return envPropertyUpdates;
+    }
 
     private void uploadMSFAppJarToS3(ApplicationDetail appDetail) {
         try {
@@ -139,13 +146,6 @@ public class MSFHelper {
         DescribeApplicationRequest describeApplicationRequest = new DescribeApplicationRequest().withApplicationName(appName);
         DescribeApplicationResult describeApplicationResult = this.msfClient.describeApplication(describeApplicationRequest);
         String conditionalToken = describeApplicationResult.getApplicationDetail().getConditionalToken();
-        describeApplicationResult
-                .getApplicationDetail()
-                .getApplicationConfigurationDescription()
-                .getApplicationCodeConfigurationDescription()
-                .getCodeContentDescription()
-                .getS3ApplicationCodeLocationDescription()
-                .getBucketARN();
 
         UpdateApplicationRequest updateApplicationRequest = new UpdateApplicationRequest()
                 .withApplicationName(appName)

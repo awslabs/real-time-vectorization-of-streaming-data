@@ -68,6 +68,7 @@ public final class CommonConstants {
         public static final String PROPERTY_EMBEDDING_INPUT_CHUNKING_MAX_OVERLAP = "chunking.maxOverlapSizeInChars";
 
         // Sink property name constants
+        public static final String PROPERTY_OS_NAME = "sink.os.name";
         public static final String PROPERTY_OS_ENDPOINT = "sink.os.endpoint";
         public static final String PROPERTY_OS_INDEX = "sink.os.vector.index";
         public static final String PROPERTY_OS_TYPE = "sink.os.type";

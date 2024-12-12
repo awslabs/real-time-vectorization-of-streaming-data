@@ -4,8 +4,7 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
-import com.amazonaws.services.opensearch.model.DescribeDomainRequest;
-import com.amazonaws.services.opensearch.model.DescribeDomainResult;
+import com.amazonaws.services.opensearch.model.*;
 
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
@@ -19,17 +18,15 @@ import java.util.NoSuchElementException;
 public class OpenSearchHelper {
     AmazonOpenSearch osProvisionedClient;
     AWSOpenSearchServerless osServerlessClient;
-    String testId;
 
-    public OpenSearchHelper(String testId) {
+    public OpenSearchHelper() {
 //        String region = AmazonOpenSearchClientBuilder.standard().getRegion();
 
         osProvisionedClient = AmazonOpenSearchClientBuilder.defaultClient();
 //        osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
-        this.testId = testId;
     }
 
-    public OpenSearchClusterData getOpenSearchClusterData(String osClusterName, OpenSearchType osClusterType) {
+    public OpenSearchClusterData getOpenSearchClusterData(String osClusterName, OpenSearchType osClusterType, String testId) {
         String openSearchEndpointURL = "";
         if (osClusterType == OpenSearchType.PROVISIONED) {
             DescribeDomainRequest describeDomainRequest = new DescribeDomainRequest().withDomainName(osClusterName);
@@ -60,11 +57,36 @@ public class OpenSearchHelper {
                 .OpenSearchCollectionName(osClusterName)
                 .OpenSearchType(osClusterType.toString())
                 .OpenSearchEndpointURL(openSearchEndpointURL)
-                .OpenSearchVectorIndexName(this.buildTestVectorName())
+                .OpenSearchVectorIndexName(this.buildTestVectorName(testId))
                 .build();
     }
 
-    private String buildTestVectorName() {
+    public String getCrossVpcEndpoint(String osClusterName, OpenSearchType osClusterType, String crossVpcId) {
+        if (osClusterType != OpenSearchType.PROVISIONED) {
+            throw new RuntimeException("Can only get cross VPC endpoint for PROVISIONED OpenSearch clusters.");
+        }
+        try {
+            ListVpcEndpointsForDomainRequest listVpcEndpointsForDomainRequest = new ListVpcEndpointsForDomainRequest()
+                    .withDomainName(osClusterName);
+            ListVpcEndpointsForDomainResult listVpcEndpointsForDomainResult = osProvisionedClient.listVpcEndpointsForDomain(listVpcEndpointsForDomainRequest);
+            List<VpcEndpointSummary> vpcEndpointSummaries = listVpcEndpointsForDomainResult.getVpcEndpointSummaryList();
+            for (VpcEndpointSummary vpceSummary : vpcEndpointSummaries) {
+                String vpceId = vpceSummary.getVpcEndpointId();
+                DescribeVpcEndpointsRequest describeVpcEndpointsRequest = new DescribeVpcEndpointsRequest().withVpcEndpointIds(vpceId);
+                DescribeVpcEndpointsResult describeVpcEndpointsResult = osProvisionedClient.describeVpcEndpoints(describeVpcEndpointsRequest);
+                VpcEndpoint vpcEndpoint = describeVpcEndpointsResult.getVpcEndpoints().get(0);
+                if (vpcEndpoint.getVpcOptions().getVPCId().equals(crossVpcId)) {
+                    return vpcEndpoint.getEndpoint();
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error looking for cross VPC endpoint belonging to " + osClusterType + ": ", e);
+        }
+        throw new RuntimeException("Did not find a cross VPC endpoint belonging to " + osClusterName +
+                " for VPC " + crossVpcId);
+    }
+
+    private String buildTestVectorName(String testId) {
         return "integ-test-index-" + testId;
     }
 }

@@ -22,6 +22,7 @@ import com.amazonaws.services.kafka.AWSKafkaClientBuilder;
 import com.amazonaws.services.kafka.model.GetBootstrapBrokersRequest;
 import com.amazonaws.services.kafka.model.GetBootstrapBrokersResult;
 
+import com.amazonaws.services.kinesisanalyticsv2.model.UpdateApplicationResult;
 import org.apache.commons.io.IOUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
@@ -101,8 +102,14 @@ class BlueprintIT {
         // TODO: prototype adding blueprint IAM role as OpenSearch master user
 
         // TODO: prototype updating MSF app config
+        System.out.println("AT STEP: prototype updating MSF app config");
+        MSFHelper msfHelper = new MSFHelper();
+        String msfAppName = cfnHelper.buildStackAppName();
+        msfHelper.updateMSFAppDefault(msfAppName);
 
         // TODO: prototype starting MSF app
+//        System.out.println("AT STEP: prototype starting MSF app");
+//        msfHelper.startMSFApp(msfAppName);
 
         // TODO: prototype producing to the MSK cluster
 
