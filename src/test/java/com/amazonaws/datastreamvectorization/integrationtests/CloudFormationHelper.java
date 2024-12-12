@@ -58,12 +58,18 @@ public class CloudFormationHelper {
     private List<Parameter> getBlueprintParameters(String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
         MSKHelper mskHelper = new MSKHelper(testId);
         MSKClusterData mskClusterData = mskHelper.getMSKClusterData(mskClusterArn);
+        System.out.println("mskClusterData:");
+        System.out.println(mskClusterData);
 
         OpenSearchHelper osHelper = new OpenSearchHelper(testId);
         OpenSearchClusterData osClusterData = osHelper.getOpenSearchClusterData(osClusterName, osClusterType);
+        System.out.println("osClusterData:");
+        System.out.println(osClusterData);
 
         BedrockHelper bedrockHelper = new BedrockHelper();
         EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
+        System.out.println("embeddingModel:");
+        System.out.println(embeddingModel.getModelId());
 
         return List.of(
             new Parameter().withParameterKey("SourceType").withParameterValue("MSK"),
