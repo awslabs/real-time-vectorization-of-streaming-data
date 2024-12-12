@@ -73,10 +73,26 @@ public class MSFHelper {
 //    private FlinkApplicationConfigurationUpdate getCrossVpcFlinkAppConfigUpdate() {
 //        EnvironmentPropertyUpdates flinkAppConfigUpdate = new EnvironmentPropertyUpdates();
 //
-//        Map<String, String> runtimePropertiesMap = Map.ofEntries(entry("","A"));
+//        String crossVpcEndpoint = "";
+//        ApplicationDetail appDetail = this.describeApplication(appName).getApplicationDetail();
+//        List<PropertyGroup> propertyGroups = appDetail
+//                .getApplicationConfigurationDescription()
+//                .getEnvironmentPropertyDescriptions()
+//                .getPropertyGroupDescriptions();
+//
+//
+//
+//        for (PropertyGroup group : propertyGroups) {
+//            if (group.getPropertyGroupId().equals("FlinkApplicationProperties")) {
+//                flinkAppConfigUpdate
+//                        break;
+//            }
+//        }
+//
+//        Map<String, String> runtimePropertiesMap = Map.ofEntries(entry("sink.os.endpoint",crossVpcEndpoint));
 //
 //        PropertyGroup propertyGroup = new PropertyGroup();
-//        propertyGroup.setPropertyGroupId();
+//        propertyGroup.setPropertyGroupId("FlinkApplicationProperties");
 //        propertyGroup.setPropertyMap();
 //        List<PropertyGroup> propertyGroups = List.of(new PropertyGroup());
 //        flinkAppConfigUpdate.setPropertyGroups(propertyGroups);

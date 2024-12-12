@@ -16,6 +16,7 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
+import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.kafka.AWSKafka;
 import com.amazonaws.services.kafka.AWSKafkaClientBuilder;
 import com.amazonaws.services.kafka.model.GetBootstrapBrokersRequest;
@@ -94,7 +95,8 @@ class BlueprintIT {
         System.out.println("AT STEP: prototype deploying blueprint stack");
         String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
         CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
-        cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
+        CreateStackResult createStackResult = cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
+        System.out.println("Created stack ID: " + createStackResult.getStackId());
 
         // TODO: prototype adding blueprint IAM role as OpenSearch master user
 
