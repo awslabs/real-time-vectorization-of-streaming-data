@@ -38,6 +38,8 @@ public class OpenSearchHelper {
             DescribeDomainResult describeDomainResult = osProvisionedClient.describeDomain(describeDomainRequest);
             openSearchEndpointURL = describeDomainResult.getDomainStatus().getEndpointV2();
             System.out.println(describeDomainResult.getDomainStatus().getDomainName());
+            System.out.println(describeDomainResult.getDomainStatus().getEndpointV2());
+            System.out.println(describeDomainResult.getDomainStatus().getEndpoints());
         } else if (osClusterType == OpenSearchType.SERVERLESS) {
             BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));
             BatchGetCollectionResult batchGetCollectionResult = osServerlessClient.batchGetCollection(batchGetCollectionRequest);
