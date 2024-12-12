@@ -1,5 +1,6 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
@@ -20,7 +21,12 @@ public class OpenSearchHelper {
     String testId;
 
     public OpenSearchHelper(String testId) {
-        osProvisionedClient = AmazonOpenSearchClientBuilder.defaultClient();
+        String region = AmazonOpenSearchClientBuilder.standard().getRegion();
+
+        osProvisionedClient = AmazonOpenSearchClientBuilder
+                .standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("es", region))
+                .build();
         osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
         this.testId = testId;
     }
@@ -30,7 +36,7 @@ public class OpenSearchHelper {
         if (osClusterType == OpenSearchType.PROVISIONED) {
             DescribeDomainRequest describeDomainRequest = new DescribeDomainRequest().withDomainName(osClusterName);
             DescribeDomainResult describeDomainResult = osProvisionedClient.describeDomain(describeDomainRequest);
-            openSearchEndpointURL = describeDomainResult.getDomainStatus().getEndpoint();
+            openSearchEndpointURL = describeDomainResult.getDomainStatus().getEndpointV2();
             System.out.println(describeDomainResult.getDomainStatus().getDomainName());
         } else if (osClusterType == OpenSearchType.SERVERLESS) {
             BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));

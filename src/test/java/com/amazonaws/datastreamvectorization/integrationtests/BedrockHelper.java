@@ -27,8 +27,6 @@ public class BedrockHelper {
 
     public BedrockHelper() {
 //        bedrockClient = AmazonBedrockClientBuilder.defaultClient();
-        DefaultCredentialsProvider defaultCredentialsProvider = DefaultCredentialsProvider.create();
-        AwsCredentials awsCredentials = defaultCredentialsProvider.resolveCredentials();
 
         bedrockClient = AmazonBedrockClientBuilder
                 .standard()
