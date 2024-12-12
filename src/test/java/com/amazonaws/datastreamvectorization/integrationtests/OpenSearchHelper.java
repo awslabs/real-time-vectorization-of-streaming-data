@@ -13,6 +13,7 @@ import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionReque
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionResult;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 public class OpenSearchHelper {
@@ -21,12 +22,9 @@ public class OpenSearchHelper {
     String testId;
 
     public OpenSearchHelper(String testId) {
-        String region = AmazonOpenSearchClientBuilder.standard().getRegion();
+//        String region = AmazonOpenSearchClientBuilder.standard().getRegion();
 
-        osProvisionedClient = AmazonOpenSearchClientBuilder
-                .standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("es", region))
-                .build();
+        osProvisionedClient = AmazonOpenSearchClientBuilder.defaultClient();
 //        osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
         this.testId = testId;
     }
@@ -36,7 +34,18 @@ public class OpenSearchHelper {
         if (osClusterType == OpenSearchType.PROVISIONED) {
             DescribeDomainRequest describeDomainRequest = new DescribeDomainRequest().withDomainName(osClusterName);
             DescribeDomainResult describeDomainResult = osProvisionedClient.describeDomain(describeDomainRequest);
-            openSearchEndpointURL = describeDomainResult.getDomainStatus().getEndpointV2();
+            String publicOSEndpoint = describeDomainResult.getDomainStatus().getEndpoint();
+            Map<String, String> vpcOSEndpointsMap = describeDomainResult.getDomainStatus().getEndpoints();
+            if (publicOSEndpoint != null) {
+                openSearchEndpointURL = publicOSEndpoint;
+            } else if (vpcOSEndpointsMap.containsKey("vpc")) {
+                openSearchEndpointURL = vpcOSEndpointsMap.get("vpc");
+            } else {
+                throw new RuntimeException("Cannot find endpoint URL for OpenSearch provisioned cluster: " + osClusterName);
+            }
+
+
+
             System.out.println(describeDomainResult.getDomainStatus().getDomainName());
             System.out.println(describeDomainResult.getDomainStatus().getEndpointV2());
             System.out.println(describeDomainResult.getDomainStatus().getEndpoints());
