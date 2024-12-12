@@ -114,7 +114,8 @@ public class CloudFormationHelper {
         CreateStackRequest createStackRequest = new CreateStackRequest()
                 .withTemplateURL(templateURL)
                 .withStackName(stackName)
-                .withParameters(stackParameters);
+                .withParameters(stackParameters)
+                .withCapabilities(Capability.CAPABILITY_NAMED_IAM);
         return cfnClient.createStack(createStackRequest);
     }
 

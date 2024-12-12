@@ -7,8 +7,13 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CopyObjectRequest;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.Map.entry;
 
 public class MSFHelper {
 
@@ -50,7 +55,8 @@ public class MSFHelper {
         ApplicationConfigurationUpdate appConfigUpdate = new ApplicationConfigurationUpdate();
         appConfigUpdate.setApplicationCodeConfigurationUpdate(this.getAppCodeConfigUpdate());
 
-
+//        appConfigUpdate.setFlinkApplicationConfigurationUpdate(this.getCrossVpcFlinkAppConfigUpdate());
+//        appConfigUpdate.setEnvironmentPropertyUpdates();
 
 
         return this.updateApplication(appName, appConfigUpdate);
@@ -63,6 +69,20 @@ public class MSFHelper {
         appCodeConfigUpdate.setCodeContentUpdate(new CodeContentUpdate().withS3ContentLocationUpdate(s3ContentLocationUpdate));
         return appCodeConfigUpdate;
     }
+
+//    private FlinkApplicationConfigurationUpdate getCrossVpcFlinkAppConfigUpdate() {
+//        EnvironmentPropertyUpdates flinkAppConfigUpdate = new EnvironmentPropertyUpdates();
+//
+//        Map<String, String> runtimePropertiesMap = Map.ofEntries(entry("","A"));
+//
+//        PropertyGroup propertyGroup = new PropertyGroup();
+//        propertyGroup.setPropertyGroupId();
+//        propertyGroup.setPropertyMap();
+//        List<PropertyGroup> propertyGroups = List.of(new PropertyGroup());
+//        flinkAppConfigUpdate.setPropertyGroups(propertyGroups);
+//
+//        return flinkAppConfigUpdate;
+//    }
 
     private void uploadMSFAppJarToS3(ApplicationDetail appDetail) {
         try {
