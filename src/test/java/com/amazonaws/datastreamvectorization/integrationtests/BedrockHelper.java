@@ -27,12 +27,13 @@ public class BedrockHelper {
     AmazonBedrock bedrockClient;
 
     public BedrockHelper() {
-        String region = AmazonBedrockClientBuilder.standard().getRegion();
-
-        bedrockClient = AmazonBedrockClientBuilder
-                .standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("bedrock", region))
-                .build();
+//        String region = AmazonBedrockClientBuilder.standard().getRegion();
+//
+//        bedrockClient = AmazonBedrockClientBuilder
+//                .standard()
+//                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("bedrock", region))
+//                .build();
+        bedrockClient = AmazonBedrockClientBuilder.defaultClient();
 
     }
 
