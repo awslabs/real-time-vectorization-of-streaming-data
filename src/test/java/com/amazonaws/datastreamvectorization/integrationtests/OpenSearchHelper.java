@@ -31,6 +31,7 @@ public class OpenSearchHelper {
             DescribeDomainRequest describeDomainRequest = new DescribeDomainRequest().withDomainName(osClusterName);
             DescribeDomainResult describeDomainResult = osProvisionedClient.describeDomain(describeDomainRequest);
             openSearchEndpointURL = describeDomainResult.getDomainStatus().getEndpoint();
+            System.out.println(describeDomainResult.getDomainStatus().getDomainName());
         } else if (osClusterType == OpenSearchType.SERVERLESS) {
             BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));
             BatchGetCollectionResult batchGetCollectionResult = osServerlessClient.batchGetCollection(batchGetCollectionRequest);
@@ -42,6 +43,13 @@ public class OpenSearchHelper {
         } else {
             throw new RuntimeException("Got unrecognized OpenSearch cluster type: " + osClusterType);
         }
+
+        System.out.println("_______________________________");
+        System.out.println(osClusterName);
+        System.out.println(osClusterType);
+        System.out.println(openSearchEndpointURL);
+        System.out.println(this.buildTestVectorName());
+        System.out.println("_______________________________");
 
         return OpenSearchClusterData.builder()
                 .OpenSearchCollectionName(osClusterName)

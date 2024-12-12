@@ -1,5 +1,6 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 import com.amazonaws.services.bedrock.AmazonBedrock;
 import com.amazonaws.services.bedrock.AmazonBedrockClientBuilder;
@@ -7,6 +8,8 @@ import com.amazonaws.services.bedrock.model.GetFoundationModelRequest;
 import com.amazonaws.services.bedrock.model.GetFoundationModelResult;
 import com.amazonaws.services.bedrock.model.ValidationException;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
 import java.util.List;
 
@@ -23,7 +26,15 @@ public class BedrockHelper {
     AmazonBedrock bedrockClient;
 
     public BedrockHelper() {
-        bedrockClient = AmazonBedrockClientBuilder.defaultClient();
+//        bedrockClient = AmazonBedrockClientBuilder.defaultClient();
+        DefaultCredentialsProvider defaultCredentialsProvider = DefaultCredentialsProvider.create();
+        AwsCredentials awsCredentials = defaultCredentialsProvider.resolveCredentials();
+
+        bedrockClient = AmazonBedrockClientBuilder
+                .standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("bedrock", "us-east-1"))
+                .build();
+
     }
 
     public EmbeddingModel getSupportedEmbeddingModel() {
