@@ -27,12 +27,12 @@ public class OpenSearchHelper {
                 .standard()
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("es", region))
                 .build();
-        osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
+//        osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
         this.testId = testId;
     }
 
     public OpenSearchClusterData getOpenSearchClusterData(String osClusterName, OpenSearchType osClusterType) {
-        String openSearchEndpointURL;
+        String openSearchEndpointURL = "";
         if (osClusterType == OpenSearchType.PROVISIONED) {
             DescribeDomainRequest describeDomainRequest = new DescribeDomainRequest().withDomainName(osClusterName);
             DescribeDomainResult describeDomainResult = osProvisionedClient.describeDomain(describeDomainRequest);
@@ -41,13 +41,14 @@ public class OpenSearchHelper {
             System.out.println(describeDomainResult.getDomainStatus().getEndpointV2());
             System.out.println(describeDomainResult.getDomainStatus().getEndpoints());
         } else if (osClusterType == OpenSearchType.SERVERLESS) {
-            BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));
-            BatchGetCollectionResult batchGetCollectionResult = osServerlessClient.batchGetCollection(batchGetCollectionRequest);
-            try {
-                openSearchEndpointURL = batchGetCollectionResult.getCollectionDetails().get(0).getCollectionEndpoint();
-            } catch (NoSuchElementException e) {
-                throw new RuntimeException("Provided OpenSearch cluster " + osClusterName + " does not exist:", e);
-            }
+//            BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));
+//            BatchGetCollectionResult batchGetCollectionResult = osServerlessClient.batchGetCollection(batchGetCollectionRequest);
+//            try {
+//                openSearchEndpointURL = batchGetCollectionResult.getCollectionDetails().get(0).getCollectionEndpoint();
+//            } catch (NoSuchElementException e) {
+//                throw new RuntimeException("Provided OpenSearch cluster " + osClusterName + " does not exist:", e);
+//            }
+            System.out.println("osClusterType is SERVERLESS");
         } else {
             throw new RuntimeException("Got unrecognized OpenSearch cluster type: " + osClusterType);
         }

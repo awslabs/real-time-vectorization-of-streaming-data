@@ -7,6 +7,7 @@ import com.amazonaws.services.bedrock.AmazonBedrockClientBuilder;
 import com.amazonaws.services.bedrock.model.GetFoundationModelRequest;
 import com.amazonaws.services.bedrock.model.GetFoundationModelResult;
 import com.amazonaws.services.bedrock.model.ValidationException;
+import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -26,11 +27,11 @@ public class BedrockHelper {
     AmazonBedrock bedrockClient;
 
     public BedrockHelper() {
-//        bedrockClient = AmazonBedrockClientBuilder.defaultClient();
+        String region = AmazonBedrockClientBuilder.standard().getRegion();
 
         bedrockClient = AmazonBedrockClientBuilder
                 .standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("bedrock", "us-east-1"))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("bedrock", region))
                 .build();
 
     }
