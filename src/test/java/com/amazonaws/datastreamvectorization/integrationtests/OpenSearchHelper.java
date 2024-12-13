@@ -10,6 +10,14 @@ import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionRequest;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionResult;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestClientBuilder;
+import org.opensearch.client.RestHighLevelClient;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -89,4 +97,30 @@ public class OpenSearchHelper {
     private String buildTestVectorName(String testId) {
         return "integ-test-index-" + testId;
     }
+
+
+
+    public void createIndex(String indexName) {
+
+    }
+
+    public void addMasterUserIAMRole(String iamRoleName) {
+//        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+//        credentialsProvider.setCredentials(AuthScope.ANY, new AWSOpen);
+//
+//        RestClientBuilder builder = RestClient.builder(new HttpHost("localhost", 9200, "https"))
+//                .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+//                    @Override
+//                    public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+//                        return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+//                    }
+//                });
+//        RestHighLevelClient client = new RestHighLevelClient(builder);
+    }
+
+    public void queryIndexRecords(String indexName, int startTimestamp) {
+
+    }
+
+
 }
