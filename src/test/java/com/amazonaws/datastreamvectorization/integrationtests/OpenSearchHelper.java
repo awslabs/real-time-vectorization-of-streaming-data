@@ -2,6 +2,7 @@ package com.amazonaws.datastreamvectorization.integrationtests;
 
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
+import com.amazonaws.datastreamvectorization.datasink.opensearch.OpenSearchSinkBuilder;
 import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
 import com.amazonaws.services.opensearch.model.*;
@@ -100,11 +101,11 @@ public class OpenSearchHelper {
 
 
 
-    public void createIndex(String indexName) {
-
-    }
-
-    public void addMasterUserIAMRole(String iamRoleName) {
+//    public void createIndex(String indexName) {
+//        OpenSearchSinkBuilder. getRestClientFactory
+//    }
+//
+//    public void addMasterUserIAMRole(String iamRoleName) {
 //        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 //        credentialsProvider.setCredentials(AuthScope.ANY, new AWSOpen);
 //
@@ -116,11 +117,11 @@ public class OpenSearchHelper {
 //                    }
 //                });
 //        RestHighLevelClient client = new RestHighLevelClient(builder);
-    }
-
-    public void queryIndexRecords(String indexName, int startTimestamp) {
-
-    }
+//    }
+//
+//    public void queryIndexRecords(String indexName, int startTimestamp) {
+//
+//    }
 
 
 }

@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -117,7 +118,7 @@ public class MSFHelper {
 
             AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
             PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, MSF_APP_JAR_S3_FILE_KEY,
-                    MSF_APP_JAR_LOCAL_PATH);
+                    new File(MSF_APP_JAR_LOCAL_PATH));
 
             System.out.println("BUCKET ARN: " + s3BucketArn);
             System.out.println("BUCKET NAME: " + s3BucketName);
