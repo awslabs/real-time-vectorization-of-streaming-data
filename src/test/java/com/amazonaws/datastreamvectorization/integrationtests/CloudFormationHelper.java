@@ -43,7 +43,7 @@ public class CloudFormationHelper {
         return "integ-test-app-" + testId;
     }
 
-    private String buildStackRoleName() {
+    public String buildStackRoleName() {
         return "integ-test-app-" + testId + "-role";
     }
 

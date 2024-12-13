@@ -16,6 +16,7 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.kafka.AWSKafka;
 import com.amazonaws.services.kafka.AWSKafkaClientBuilder;
@@ -94,6 +95,19 @@ class BlueprintIT {
         }
 
         // TODO: prototype creating an index in the OpenSearch cluster
+        System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
+        OpenSearchRestClient osRestClient = new OpenSearchRestClient();
+        OpenSearchHelper openSearchHelper = new OpenSearchHelper();
+        OpenSearchClusterData openSearchClusterData = openSearchHelper.getOpenSearchClusterData(openSearchClusterName, openSearchType, "");
+
+        BedrockHelper bedrockHelper = new BedrockHelper();
+        EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
+
+        osRestClient.createIndex(
+                openSearchClusterData.getOpenSearchEndpointURL(),
+                openSearchType,
+                "integ-os-index-" + currentTimestamp,
+                embeddingModel);
 
         // TODO: prototype deploying blueprint stack
         System.out.println("AT STEP: prototype deploying blueprint stack");
@@ -103,6 +117,9 @@ class BlueprintIT {
         System.out.println("Stack creation succeeded: " + stackCreationSucceeded);
 
         // TODO: prototype adding blueprint IAM role as OpenSearch master user
+        System.out.println("AT STEP: prototype adding blueprint IAM role as OpenSearch master user");
+        OpenSearchHelper osHelper = new OpenSearchHelper();
+        osHelper.addMasterUserIAMRole(openSearchClusterName, openSearchType, cfnHelper.buildStackRoleName());
 
         // TODO: prototype updating MSF app config
         System.out.println("AT STEP: prototype updating MSF app config");

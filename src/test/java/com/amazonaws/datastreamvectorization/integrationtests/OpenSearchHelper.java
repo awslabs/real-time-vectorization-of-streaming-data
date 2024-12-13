@@ -1,10 +1,12 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
-import com.amazonaws.datastreamvectorization.datasink.opensearch.OpenSearchSinkBuilder;
 import com.amazonaws.regions.AwsRegionProvider;
 import com.amazonaws.regions.DefaultAwsRegionProviderChain;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
+import com.amazonaws.services.identitymanagement.model.GetRoleRequest;
+import com.amazonaws.services.identitymanagement.model.GetRoleResult;
 import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
 import com.amazonaws.services.opensearch.model.*;
@@ -13,38 +15,22 @@ import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionRequest;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionResult;
-import io.github.acm19.aws.interceptor.http.AwsRequestSigningApacheInterceptor;
-import org.apache.flink.connector.opensearch.sink.RestClientFactory;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.opensearch.client.RestClient;
-import org.opensearch.client.RestClientBuilder;
-import org.opensearch.client.RestHighLevelClient;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.auth.signer.Aws4Signer;
-import software.amazon.awssdk.regions.Region;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+@Slf4j
 public class OpenSearchHelper {
-    AmazonOpenSearch osProvisionedClient;
-    AWSOpenSearchServerless osServerlessClient;
-    String region;
+    private AmazonOpenSearch osProvisionedClient;
+    private AWSOpenSearchServerless osServerlessClient;
 
     public OpenSearchHelper() {
         AwsRegionProvider regionProvider = new DefaultAwsRegionProviderChain();
-        region = regionProvider.getRegion();
 
         osProvisionedClient = AmazonOpenSearchClientBuilder.defaultClient();
-//        osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
+        osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
     }
 
     public OpenSearchClusterData getOpenSearchClusterData(String osClusterName, OpenSearchType osClusterType, String testId) {
@@ -62,13 +48,13 @@ public class OpenSearchHelper {
                 throw new RuntimeException("Cannot find endpoint URL for OpenSearch provisioned cluster: " + osClusterName);
             }
         } else if (osClusterType == OpenSearchType.SERVERLESS) {
-//            BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));
-//            BatchGetCollectionResult batchGetCollectionResult = osServerlessClient.batchGetCollection(batchGetCollectionRequest);
-//            try {
-//                openSearchEndpointURL = batchGetCollectionResult.getCollectionDetails().get(0).getCollectionEndpoint();
-//            } catch (NoSuchElementException e) {
-//                throw new RuntimeException("Provided OpenSearch cluster " + osClusterName + " does not exist:", e);
-//            }
+            BatchGetCollectionRequest batchGetCollectionRequest = new BatchGetCollectionRequest().withNames(List.of(osClusterName));
+            BatchGetCollectionResult batchGetCollectionResult = osServerlessClient.batchGetCollection(batchGetCollectionRequest);
+            try {
+                openSearchEndpointURL = batchGetCollectionResult.getCollectionDetails().get(0).getCollectionEndpoint();
+            } catch (NoSuchElementException e) {
+                throw new RuntimeException("Provided OpenSearch cluster " + osClusterName + " does not exist:", e);
+            }
             System.out.println("osClusterType is SERVERLESS");
         } else {
             throw new RuntimeException("Got unrecognized OpenSearch cluster type: " + osClusterType);
@@ -111,47 +97,25 @@ public class OpenSearchHelper {
         return "integ-test-index-" + testId;
     }
 
+    public void addMasterUserIAMRole(String osDomainName, OpenSearchType openSearchType, String iamRoleName) {
+        if (!openSearchType.equals(OpenSearchType.PROVISIONED)) {
+            log.info("Master user role can only be added to provisioned OpenSearch clusters. " +
+                    "Skipping step to add IAM role as a master user to cluster {}", osDomainName);
+            return;
+        }
 
+        AmazonIdentityManagement iamClient = AmazonIdentityManagementClientBuilder.defaultClient();
+        GetRoleRequest getRoleRequest = new GetRoleRequest().withRoleName(iamRoleName);
+        GetRoleResult getRoleResult = iamClient.getRole(getRoleRequest);
+        String iamRoleARN = getRoleResult.getRole().getArn();
 
-    public void createIndex(OpenSearchType openSearchType, String indexName) {
+        MasterUserOptions masterUserOptions = new MasterUserOptions().withMasterUserARN(iamRoleARN);
+        AdvancedSecurityOptionsInput advancedSecurityOptionsInput = new AdvancedSecurityOptionsInput()
+                .withMasterUserOptions(masterUserOptions);
 
-//        HttpRequestInterceptor interceptor = new AwsRequestSigningApacheInterceptor(
-//                openSearchType.getServiceName(),
-//                Aws4Signer.create(),
-//                DefaultCredentialsProvider.create(),
-//                Region.of(this.region));
-//
-//        RestClientBuilder restClientBuilder = new RestClientBuilder.HttpClientConfigCallback();
-//
-//        RestClientBuilder.setHttpClientConfigCallback(
-//                httpAsyncClientBuilder -> httpAsyncClientBuilder.addInterceptorLast(interceptor));
-//
-//        RestClientFactory restClientFactory = OpenSearchSinkBuilder
-//                .getRestClientFactory(openSearchType.getServiceName(), this.region);
-//
-//        restClientFactory.configureRestClientBuilder();
-//
-//        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-//        credentialsProvider.setCredentials(AuthScope.ANY, new AWSOpen);
-//
-//        RestClientBuilder builder = RestClient.builder(new HttpHost("localhost", 9200, "https"))
-//                .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
-//                    @Override
-//                    public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
-//                        return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-//                    }
-//                });
-//        RestHighLevelClient client = new RestHighLevelClient(builder);
-//        client.se
+        UpdateDomainConfigRequest updateDomainConfigRequest = new UpdateDomainConfigRequest()
+                .withDomainName(osDomainName)
+                .withAdvancedSecurityOptions(advancedSecurityOptionsInput);
+        this.osProvisionedClient.updateDomainConfig(updateDomainConfigRequest);
     }
-
-    public void addMasterUserIAMRole(String iamRoleName) {
-//        this.osProvisionedClient.
-    }
-
-    public void queryIndexRecords(String indexName, int startTimestamp) {
-
-    }
-
-
 }
