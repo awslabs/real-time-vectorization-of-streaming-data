@@ -111,19 +111,20 @@ class BlueprintIT {
         msfHelper.updateMSFAppDefault(msfAppName);
 
         // TODO: prototype starting MSF app
-//        System.out.println("AT STEP: prototype starting MSF app");
-//        msfHelper.startMSFApp(msfAppName);
+        System.out.println("AT STEP: prototype starting MSF app");
+        msfHelper.startMSFApp(msfAppName);
 
         // TODO: prototype producing to the MSK cluster
-        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(currentTimestamp);
-        List<ProducerRecord<String, String>> mskRecords = List.of(
-                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-1"),
-                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-2"),
-                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-3")
-        );
-        for (ProducerRecord<String, String> record : mskRecords) {
-            kafkaProducer.send(record);
-        }
+//        System.out.println("AT STEP: prototype producing to the MSK cluster");
+//        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(currentTimestamp);
+//        List<ProducerRecord<String, String>> mskRecords = List.of(
+//                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-1"),
+//                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-2"),
+//                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-3")
+//        );
+//        for (ProducerRecord<String, String> record : mskRecords) {
+//            kafkaProducer.send(record);
+//        }
 
         // TODO: prototype checking OpenSearch records
 

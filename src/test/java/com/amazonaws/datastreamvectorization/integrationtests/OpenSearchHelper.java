@@ -3,6 +3,8 @@ package com.amazonaws.datastreamvectorization.integrationtests;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.datastreamvectorization.datasink.opensearch.OpenSearchSinkBuilder;
+import com.amazonaws.regions.AwsRegionProvider;
+import com.amazonaws.regions.DefaultAwsRegionProviderChain;
 import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
 import com.amazonaws.services.opensearch.model.*;
@@ -11,7 +13,10 @@ import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionRequest;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionResult;
+import io.github.acm19.aws.interceptor.http.AwsRequestSigningApacheInterceptor;
+import org.apache.flink.connector.opensearch.sink.RestClientFactory;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.opensearch.client.RestClient;
@@ -19,6 +24,11 @@ import org.opensearch.client.RestClientBuilder;
 import org.opensearch.client.RestHighLevelClient;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.signer.Aws4Signer;
+import software.amazon.awssdk.regions.Region;
 
 import java.util.List;
 import java.util.Map;
@@ -27,9 +37,11 @@ import java.util.NoSuchElementException;
 public class OpenSearchHelper {
     AmazonOpenSearch osProvisionedClient;
     AWSOpenSearchServerless osServerlessClient;
+    String region;
 
     public OpenSearchHelper() {
-//        String region = AmazonOpenSearchClientBuilder.standard().getRegion();
+        AwsRegionProvider regionProvider = new DefaultAwsRegionProviderChain();
+        region = regionProvider.getRegion();
 
         osProvisionedClient = AmazonOpenSearchClientBuilder.defaultClient();
 //        osServerlessClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
@@ -101,11 +113,24 @@ public class OpenSearchHelper {
 
 
 
-//    public void createIndex(String indexName) {
-//        OpenSearchSinkBuilder. getRestClientFactory
-//    }
+    public void createIndex(OpenSearchType openSearchType, String indexName) {
+
+//        HttpRequestInterceptor interceptor = new AwsRequestSigningApacheInterceptor(
+//                openSearchType.getServiceName(),
+//                Aws4Signer.create(),
+//                DefaultCredentialsProvider.create(),
+//                Region.of(this.region));
 //
-//    public void addMasterUserIAMRole(String iamRoleName) {
+//        RestClientBuilder restClientBuilder = new RestClientBuilder.HttpClientConfigCallback();
+//
+//        RestClientBuilder.setHttpClientConfigCallback(
+//                httpAsyncClientBuilder -> httpAsyncClientBuilder.addInterceptorLast(interceptor));
+//
+//        RestClientFactory restClientFactory = OpenSearchSinkBuilder
+//                .getRestClientFactory(openSearchType.getServiceName(), this.region);
+//
+//        restClientFactory.configureRestClientBuilder();
+//
 //        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 //        credentialsProvider.setCredentials(AuthScope.ANY, new AWSOpen);
 //
@@ -117,11 +142,16 @@ public class OpenSearchHelper {
 //                    }
 //                });
 //        RestHighLevelClient client = new RestHighLevelClient(builder);
-//    }
-//
-//    public void queryIndexRecords(String indexName, int startTimestamp) {
-//
-//    }
+//        client.se
+    }
+
+    public void addMasterUserIAMRole(String iamRoleName) {
+//        this.osProvisionedClient.
+    }
+
+    public void queryIndexRecords(String indexName, int startTimestamp) {
+
+    }
 
 
 }
