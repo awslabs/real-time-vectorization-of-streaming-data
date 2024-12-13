@@ -96,8 +96,8 @@ class BlueprintIT {
         System.out.println("AT STEP: prototype deploying blueprint stack");
         String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
         CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
-        CreateStackResult createStackResult = cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
-        System.out.println("Created stack ID: " + createStackResult.getStackId());
+        boolean stackCreationSucceeded = cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
+        System.out.println("Stack creation succeeded: " + stackCreationSucceeded);
 
         // TODO: prototype adding blueprint IAM role as OpenSearch master user
 
@@ -116,6 +116,8 @@ class BlueprintIT {
         // TODO: prototype checking OpenSearch records
 
         // TODO: prototype stopping MSF app
+//        System.out.println("AT STEP: prototype stopping MSF app");
+//        msfHelper.stopMSFApp(msfAppName, true);
 
         // TODO: prototype deleting stack (and deleting VPC endpoints)
 

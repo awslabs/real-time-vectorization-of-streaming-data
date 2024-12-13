@@ -15,13 +15,7 @@ import com.amazonaws.services.opensearch.model.DeleteVpcEndpointRequest;
 import com.amazonaws.services.opensearch.model.DeleteVpcEndpointResult;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
-import org.apache.commons.io.IOUtils;
-import org.json.JSONObject;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,6 +23,16 @@ import java.util.regex.Pattern;
 public class CloudFormationHelper {
     AmazonCloudFormation cfnClient;
     String testId;
+    private final int MAX_POLL_STACK_STATUS_RETRIES = 15;
+    private final Long POLL_STACK_STATUS_DELAY = 60000L; // 1 minute
+    private final List<StackStatus> TERMINAL_STACK_STATUSES = List.of(
+            StackStatus.CREATE_COMPLETE,
+            StackStatus.CREATE_FAILED,
+            StackStatus.DELETE_COMPLETE,
+            StackStatus.DELETE_FAILED,
+            StackStatus.ROLLBACK_COMPLETE,
+            StackStatus.ROLLBACK_FAILED
+    );
 
     public CloudFormationHelper(String testId) {
         cfnClient = AmazonCloudFormationClientBuilder.defaultClient();
@@ -98,25 +102,40 @@ public class CloudFormationHelper {
         );
     }
 
-    public CreateStackResult createBlueprintStack(String templateURL, String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
+    public String pollBlueprintStatusStatus(String stackName) throws InterruptedException {
+        int retryCount = 0;
+        String stackStatus = "";
+        while (retryCount++ <= MAX_POLL_STACK_STATUS_RETRIES) {
+            DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackName);
+            DescribeStacksResult describeStacksResult = cfnClient.describeStacks(describeStacksRequest);
+            stackStatus = describeStacksResult.getStacks().get(0).getStackStatus();
+            if (TERMINAL_STACK_STATUSES.contains(StackStatus.fromValue(stackStatus))) {
+                return stackStatus;
+            }
+            Thread.sleep(POLL_STACK_STATUS_DELAY);
+        }
+        return stackStatus;
+    }
+
+    public boolean createBlueprintStack(String templateURL, String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
         String stackName = "datastream-vec-integ-test-" + testId;
-//        String templateBody = "";
-//        try {
-//            InputStream is = new FileInputStream(templateFilePath);
-//            templateBody = IOUtils.toString(is, StandardCharsets.UTF_8);
-//        } catch (IOException e) {
-//            throw new RuntimeException("Could not read blueprint CDK template file " + templateFilePath, e);
-//        }
 
-        System.out.println("Stack template URL: " + templateURL);
-        List<Parameter> stackParameters = getBlueprintParameters(mskClusterArn, osClusterName, osClusterType);
+        try {
+            System.out.println("Stack template URL: " + templateURL);
+            List<Parameter> stackParameters = getBlueprintParameters(mskClusterArn, osClusterName, osClusterType);
 
-        CreateStackRequest createStackRequest = new CreateStackRequest()
-                .withTemplateURL(templateURL)
-                .withStackName(stackName)
-                .withParameters(stackParameters)
-                .withCapabilities(Capability.CAPABILITY_NAMED_IAM);
-        return cfnClient.createStack(createStackRequest);
+            CreateStackRequest createStackRequest = new CreateStackRequest()
+                    .withTemplateURL(templateURL)
+                    .withStackName(stackName)
+                    .withParameters(stackParameters)
+                    .withCapabilities(Capability.CAPABILITY_NAMED_IAM);
+            cfnClient.createStack(createStackRequest);
+
+            String stackStatus = this.pollBlueprintStatusStatus(stackName);
+            return stackStatus.equals(StackStatus.CREATE_COMPLETE.toString());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create blueprint stack " + stackName, e);
+        }
     }
 
     public DeleteStackResult deleteBlueprintStack(String stackName) {
