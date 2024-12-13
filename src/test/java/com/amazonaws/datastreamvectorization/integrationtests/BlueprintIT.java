@@ -27,6 +27,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
@@ -70,9 +72,10 @@ class BlueprintIT {
 
         // TODO: prototype creating a topic on the MSK cluster
         System.out.println("AT STEP: prototype creating a topic on the MSK cluster");
-        String mskTestTopicName = "integ-test-topic-" + currentTimestamp;
+        MSKHelper mskHelper = new MSKHelper(currentTimestamp);
+        String mskTestTopicName = mskHelper.buildTestTopicName();
         KafkaClients kafkaClients = new KafkaClients(mskClusterBootstrapBrokerString);
-        AdminClient adminClient = kafkaClients.createKafkaAdminClient();
+        AdminClient adminClient = kafkaClients.createKafkaAdminClient(currentTimestamp);
         CreateTopicsResult createTopicsResult = adminClient.createTopics(List.of(new NewTopic(mskTestTopicName, 3, (short) 3)));
         System.out.println(createTopicsResult);
 
@@ -112,6 +115,15 @@ class BlueprintIT {
 //        msfHelper.startMSFApp(msfAppName);
 
         // TODO: prototype producing to the MSK cluster
+        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(currentTimestamp);
+        List<ProducerRecord<String, String>> mskRecords = List.of(
+                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-1"),
+                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-2"),
+                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-3")
+        );
+        for (ProducerRecord<String, String> record : mskRecords) {
+            kafkaProducer.send(record);
+        }
 
         // TODO: prototype checking OpenSearch records
 

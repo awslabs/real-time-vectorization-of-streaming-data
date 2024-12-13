@@ -58,14 +58,14 @@ public class MSKHelper {
         return MSKClusterData.builder()
                 .MSKClusterArn(mskClusterArn)
                 .MSKClusterName(mskClusterName)
-                .MSKTopics(this.buildTestTopicNames())
+                .MSKTopics(this.buildTestTopicName())
                 .MSKVpcId(mskVpcId)
                 .MSKClusterSubnetIds(String.join(",", mskSubnetIDs))
                 .MSKClusterSecurityGroupIds(String.join(",", mskSecurityGroupIDs))
                 .build();
     }
 
-    public String buildTestTopicNames() {
+    public String buildTestTopicName() {
         return "integ-test-topic-" + testId;
     }
 

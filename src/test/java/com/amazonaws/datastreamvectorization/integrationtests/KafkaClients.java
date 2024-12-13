@@ -15,7 +15,6 @@
 */
 package com.amazonaws.datastreamvectorization.integrationtests;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -28,12 +27,12 @@ import java.util.Properties;
 class KafkaClients {
     private static final String CLIENT_ID = "test-kafka-helper-id";
     private final Properties securityProperties;
-//    private final Properties producerClientProperties;
+    private final Properties producerClientProperties;
     private final Properties adminClientProperties;
 
     public KafkaClients(String bootstrapBrokers) {
         this.securityProperties = getSecurityProperties();
-//        this.producerClientProperties = getProducerClientProperties(bootstrapBrokers);
+        this.producerClientProperties = getProducerClientProperties(bootstrapBrokers);
         this.adminClientProperties = getAdminClientProperties(bootstrapBrokers);
     }
 
@@ -52,11 +51,11 @@ class KafkaClients {
         return securityProperties;
     }
 
-//    Properties getProducerClientProperties(String bootstrapBrokers) {
-//        Properties producerClientProperties = new Properties();
-//        producerClientProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapBrokers);
-//        return producerClientProperties;
-//    }
+    Properties getProducerClientProperties(String bootstrapBrokers) {
+        Properties producerClientProperties = new Properties();
+        producerClientProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapBrokers);
+        return producerClientProperties;
+    }
 
     Properties getAdminClientProperties(String bootstrapBrokers) {
         Properties adminClientProperties = new Properties();
@@ -65,50 +64,26 @@ class KafkaClients {
         return adminClientProperties;
     }
 
-//    public KafkaProducer createKafkaProducer() {
-//        Properties producerProps = new Properties();
-//        producerProps.putAll(this.securityProperties);
-//        producerProps.putAll(this.producerClientProperties);
-//        producerProps.put(ProducerConfig.CLIENT_ID_CONFIG, CLIENT_ID + "-producer" + RandomStringUtils.randomAlphanumeric(6));
-//
-//        KafkaProducer<K, V> producer;
-//        try {
-//            producer = new KafkaProducer<>(producerProps, keySerializer, valueSerializer);
-//            addProducerCount();
-//        } catch (Exception e) {
-//            throw new RuntimeException("Failed to create a kafka producer.", e);
-//        }
-//        return producer;
-//    }
+    public <K, V> KafkaProducer<K, V> createKafkaProducer(String testId) {
+        Properties producerProps = new Properties();
+        producerProps.putAll(this.securityProperties);
+        producerProps.putAll(this.producerClientProperties);
+        producerProps.put(ProducerConfig.CLIENT_ID_CONFIG, CLIENT_ID + "-producer-" + testId);
 
-//    public KafkaConsumer createKafkaConsumer() {
-//        Properties consumerProps = new Properties();
-//        String groupId = IntegrationTestBase.createTwConsumerGroupId(UUID.randomUUID().toString());
-//        if (!OAUTH_MECHANISM.equals(overridingProps.getProperty(SaslConfigs.SASL_MECHANISM))) {
-//            consumerProps.putAll(this.securityProperties);
-//        }
-//        consumerProps.putAll(this.consumerClientProperties);
-//        consumerProps.put(ConsumerConfig.CLIENT_ID_CONFIG, CLIENT_ID + "-consumer" + RandomStringUtils.randomAlphanumeric(6));
-//        consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG,  groupId);
-//
-//        consumerProps.putAll(overridingProps);
-//        propsToRemove.forEach(key -> consumerProps.remove(key));
-//
-//        KafkaConsumer<K, V> consumer;
-//        try {
-//            consumer = new KafkaConsumer<>(consumerProps, keyDeserializer, valueDeserializer);
-//            addConsumerCount();
-//        } catch (Exception e) {
-//            throw new RuntimeException("Failed to create a kafka consumer.", e);
-//        }
-//        return consumer;
-//    }
+        KafkaProducer<K, V> producer;
+        try {
+            producer = new KafkaProducer<>(producerProps);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create a kafka producer.", e);
+        }
+        return producer;
+    }
 
-    public AdminClient createKafkaAdminClient() {
+    public AdminClient createKafkaAdminClient(String testId) {
         Properties adminClientProps = new Properties();
         adminClientProps.putAll(this.securityProperties);
         adminClientProps.putAll(this.adminClientProperties);
-        adminClientProps.put(AdminClientConfig.CLIENT_ID_CONFIG, CLIENT_ID + "-admin" + RandomStringUtils.randomAlphanumeric(6));
+        adminClientProps.put(AdminClientConfig.CLIENT_ID_CONFIG, CLIENT_ID + "-admin-" + testId);
 
         AdminClient adminClient;
         try {

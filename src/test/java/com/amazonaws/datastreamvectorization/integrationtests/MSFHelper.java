@@ -6,11 +6,8 @@ import com.amazonaws.services.kinesisanalyticsv2.AmazonKinesisAnalyticsV2ClientB
 import com.amazonaws.services.kinesisanalyticsv2.model.*;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.CopyObjectRequest;
-import com.amazonaws.services.s3.model.PresignedUrlUploadRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -121,6 +118,12 @@ public class MSFHelper {
             AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
             PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, MSF_APP_JAR_S3_FILE_KEY,
                     MSF_APP_JAR_LOCAL_PATH);
+
+            System.out.println("BUCKET ARN: " + s3BucketArn);
+            System.out.println("BUCKET NAME: " + s3BucketName);
+            System.out.println("MSF_APP_JAR_S3_FILE_KEY: " + MSF_APP_JAR_S3_FILE_KEY);
+            System.out.println("MSF_APP_JAR_LOCAL_PATH: " + MSF_APP_JAR_LOCAL_PATH);
+
             s3Client.putObject(putObjectRequest);
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload test MSF app jar to the MSF app bucket: ", e);
