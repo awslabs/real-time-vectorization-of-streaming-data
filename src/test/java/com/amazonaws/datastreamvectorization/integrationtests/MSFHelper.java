@@ -131,7 +131,7 @@ public class MSFHelper {
     }
 
     private String getBucketNameFromArn(String s3BucketArn) {
-        Pattern s3BucketArnPattern = Pattern.compile("arn:aws:s3:::(?<s3BucketName>[a-z0-9.\\-])");
+        Pattern s3BucketArnPattern = Pattern.compile("arn:aws:s3:::(?<s3BucketName>[a-z0-9.\\-]+)");
         Matcher matcher = s3BucketArnPattern.matcher(s3BucketArn);
         if (matcher.find()) {
             return matcher.group("s3BucketName");
