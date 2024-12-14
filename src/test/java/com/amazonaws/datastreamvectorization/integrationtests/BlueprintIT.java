@@ -85,6 +85,7 @@ class BlueprintIT {
         JSONObject openSearchCluster = (JSONObject) testInputJson.get("OpenSearchCluster");
         String openSearchClusterName = (String) openSearchCluster.get("Name");
         String openSearchClusterType = (String) openSearchCluster.get("Type");
+        String openSearchClusterEndpoint = (String) openSearchCluster.get("Endpoint");
         OpenSearchType openSearchType;
         if (openSearchClusterType.equals("PROVISIONED")) {
             openSearchType = OpenSearchType.PROVISIONED;
@@ -97,14 +98,12 @@ class BlueprintIT {
         // TODO: prototype creating an index in the OpenSearch cluster
         System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
         OpenSearchRestClient osRestClient = new OpenSearchRestClient();
-        OpenSearchHelper openSearchHelper = new OpenSearchHelper();
-        OpenSearchClusterData openSearchClusterData = openSearchHelper.getOpenSearchClusterData(openSearchClusterName, openSearchType, "");
 
         BedrockHelper bedrockHelper = new BedrockHelper();
         EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
 
         osRestClient.createIndex(
-                openSearchClusterData.getOpenSearchEndpointURL(),
+                openSearchClusterEndpoint,
                 openSearchType,
                 "integ-os-index-" + currentTimestamp,
                 embeddingModel);
