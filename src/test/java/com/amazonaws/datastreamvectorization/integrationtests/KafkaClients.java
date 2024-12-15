@@ -21,6 +21,8 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
 
@@ -64,19 +66,18 @@ class KafkaClients {
         return adminClientProperties;
     }
 
-    public <K, V> KafkaProducer<K, V> createKafkaProducer(String testId) {
+    public KafkaProducer<String, String> createKafkaProducer(String testId) {
         Properties producerProps = new Properties();
         producerProps.putAll(this.securityProperties);
         producerProps.putAll(this.producerClientProperties);
         producerProps.put(ProducerConfig.CLIENT_ID_CONFIG, CLIENT_ID + "-producer-" + testId);
 
-        KafkaProducer<K, V> producer;
         try {
-            producer = new KafkaProducer<>(producerProps);
+            Serializer<String> serializer = new StringSerializer();
+            return new KafkaProducer<>(producerProps, serializer, serializer);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create a kafka producer.", e);
         }
-        return producer;
     }
 
     public AdminClient createKafkaAdminClient(String testId) {
