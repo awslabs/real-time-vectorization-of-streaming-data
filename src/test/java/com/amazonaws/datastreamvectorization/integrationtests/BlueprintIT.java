@@ -83,21 +83,21 @@ class BlueprintIT {
         CreateTopicsResult createTopicsResult = adminClient.createTopics(List.of(new NewTopic(mskTestTopicName, 3, (short) 3)));
         System.out.println(createTopicsResult);
 
-        // TODO: prototype get OpenSearch cluster info
-        System.out.println("AT STEP: prototype get OpenSearch cluster info");
-        JSONObject openSearchCluster = (JSONObject) testInputJson.get("OpenSearchCluster");
-        String openSearchClusterName = (String) openSearchCluster.get("Name");
-        String openSearchClusterType = (String) openSearchCluster.get("Type");
-        String openSearchClusterEndpointUrl = (String) openSearchCluster.get("EndpointUrl");
-        System.out.println("OpenSearch cluster endpoint URL: " + openSearchClusterEndpointUrl);
-        OpenSearchType openSearchType;
-        if (openSearchClusterType.equals("PROVISIONED")) {
-            openSearchType = OpenSearchType.PROVISIONED;
-        } else if (openSearchClusterType.equals("SERVERLESS")) {
-            openSearchType = OpenSearchType.SERVERLESS;
-        } else {
-            throw new RuntimeException("Unsupported OpenSearch cluster type " + openSearchClusterType);
-        }
+//        // TODO: prototype get OpenSearch cluster info
+//        System.out.println("AT STEP: prototype get OpenSearch cluster info");
+//        JSONObject openSearchCluster = (JSONObject) testInputJson.get("OpenSearchCluster");
+//        String openSearchClusterName = (String) openSearchCluster.get("Name");
+//        String openSearchClusterType = (String) openSearchCluster.get("Type");
+//        String openSearchClusterEndpointUrl = (String) openSearchCluster.get("EndpointUrl");
+//        System.out.println("OpenSearch cluster endpoint URL: " + openSearchClusterEndpointUrl);
+//        OpenSearchType openSearchType;
+//        if (openSearchClusterType.equals("PROVISIONED")) {
+//            openSearchType = OpenSearchType.PROVISIONED;
+//        } else if (openSearchClusterType.equals("SERVERLESS")) {
+//            openSearchType = OpenSearchType.SERVERLESS;
+//        } else {
+//            throw new RuntimeException("Unsupported OpenSearch cluster type " + openSearchClusterType);
+//        }
 
 //        // TODO: prototype creating an index in the OpenSearch cluster
 //        System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
