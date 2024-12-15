@@ -18,6 +18,8 @@ package com.amazonaws.datastreamvectorization.integrationtests;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 import com.amazonaws.services.cloudformation.model.CreateStackResult;
+import com.amazonaws.services.cloudformation.model.DeleteStackResult;
+import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.kafka.AWSKafka;
 import com.amazonaws.services.kafka.AWSKafkaClientBuilder;
 import com.amazonaws.services.kafka.model.GetBootstrapBrokersRequest;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 
@@ -96,65 +99,96 @@ class BlueprintIT {
             throw new RuntimeException("Unsupported OpenSearch cluster type " + openSearchClusterType);
         }
 
-        // TODO: prototype creating an index in the OpenSearch cluster
-        System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
-        OpenSearchRestClient osRestClient = new OpenSearchRestClient();
-
-        BedrockHelper bedrockHelper = new BedrockHelper();
-        EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
-
-        osRestClient.createIndex(
-                openSearchClusterEndpointUrl,
-                openSearchType,
-                "integ-os-index-" + currentTimestamp,
-                embeddingModel);
-
-        // TODO: prototype deploying blueprint stack
-        System.out.println("AT STEP: prototype deploying blueprint stack");
-        String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
-        CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
-        boolean stackCreationSucceeded = cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
-        System.out.println("Stack creation succeeded: " + stackCreationSucceeded);
-
-        // TODO: prototype adding blueprint IAM role as OpenSearch master user
-        System.out.println("AT STEP: prototype adding blueprint IAM role as OpenSearch master user");
-        OpenSearchHelper osHelper = new OpenSearchHelper();
-        osHelper.addMasterUserIAMRole(openSearchClusterName, openSearchType, cfnHelper.buildStackRoleName());
-
-        // TODO: prototype updating MSF app config
-        System.out.println("AT STEP: prototype updating MSF app config");
-        MSFHelper msfHelper = new MSFHelper();
-        String msfAppName = cfnHelper.buildStackAppName();
-        msfHelper.updateMSFAppDefault(msfAppName);
-
-        // TODO: prototype starting MSF app
-        System.out.println("AT STEP: prototype starting MSF app");
-        msfHelper.startMSFApp(msfAppName);
+//        // TODO: prototype creating an index in the OpenSearch cluster
+//        System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
+//        OpenSearchRestClient osRestClient = new OpenSearchRestClient();
+//
+//        BedrockHelper bedrockHelper = new BedrockHelper();
+//        EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
+//
+//        String opensearchIndexName = "integ-os-index-" + currentTimestamp;
+//
+//        osRestClient.createIndex(
+//                openSearchClusterEndpointUrl,
+//                openSearchType,
+//                opensearchIndexName,
+//                embeddingModel);
 
         // TODO: prototype producing to the MSK cluster
+        System.out.println("AT STEP: prototype producing to the MSK cluster");
+        List<String> testRecords = List.of(
+                currentTimestamp + " integ-test-value-1",
+                currentTimestamp + " integ-test-value-2",
+                currentTimestamp + " integ-test-value-3"
+        );
+        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(currentTimestamp);
+        List<ProducerRecord<String, String>> mskRecords = testRecords
+                .stream()
+                .map(record -> new ProducerRecord<String, String>(mskTestTopicName, record))
+                .collect(Collectors.toList());
+        for (ProducerRecord<String, String> record : mskRecords) {
+            kafkaProducer.send(record);
+        }
+
+//        // TODO: prototype deploying blueprint stack
+//        System.out.println("AT STEP: prototype deploying blueprint stack");
+//        String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
+//        CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
+//        Stack blueprintStack = cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
+//        System.out.println("Stack creation succeeded: " + blueprintStack);
+//
+//        // TODO: prototype adding blueprint IAM role as OpenSearch master user
+//        System.out.println("AT STEP: prototype adding blueprint IAM role as OpenSearch master user");
+//        OpenSearchHelper osHelper = new OpenSearchHelper();
+//        osHelper.addMasterUserIAMRole(openSearchClusterName, openSearchType, cfnHelper.buildStackRoleName());
+//
+//        // TODO: prototype updating MSF app config
+//        System.out.println("AT STEP: prototype updating MSF app config");
+//        MSFHelper msfHelper = new MSFHelper();
+//        String msfAppName = cfnHelper.buildStackAppName();
+//        msfHelper.updateMSFAppDefault(msfAppName);
+//
+//        // TODO: prototype starting MSF app
+//        System.out.println("AT STEP: prototype starting MSF app");
+//        msfHelper.startMSFApp(msfAppName);
+//
+//        // TODO: prototype producing to the MSK cluster
 //        System.out.println("AT STEP: prototype producing to the MSK cluster");
-//        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(currentTimestamp);
-//        List<ProducerRecord<String, String>> mskRecords = List.of(
-//                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-1"),
-//                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-2"),
-//                new ProducerRecord<>(mskTestTopicName, currentTimestamp + " integ-test-value-3")
+//        List<String> testRecords = List.of(
+//                currentTimestamp + " integ-test-value-1",
+//                currentTimestamp + " integ-test-value-2",
+//                currentTimestamp + " integ-test-value-3"
 //        );
+//        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(currentTimestamp);
+//        List<ProducerRecord<String, String>> mskRecords = testRecords
+//                .stream()
+//                .map(record -> new ProducerRecord<String, String>(mskTestTopicName, record))
+//                .collect(Collectors.toList());
 //        for (ProducerRecord<String, String> record : mskRecords) {
 //            kafkaProducer.send(record);
 //        }
-
-        // TODO: prototype checking OpenSearch records
-
-        // TODO: prototype stopping MSF app
+//
+//        // TODO: prototype checking OpenSearch records
+//        System.out.println("AT STEP: prototype checking OpenSearch records");
+//        List<OpenSearchIndexDocument> searchResult = osRestClient.queryIndexRecords(openSearchType, opensearchIndexName, openSearchClusterEndpointUrl);
+//
+//        osRestClient.validateOpenSearchRecords(testRecords, searchResult);
+//
+//        // TODO: prototype stopping MSF app
 //        System.out.println("AT STEP: prototype stopping MSF app");
 //        msfHelper.stopMSFApp(msfAppName, true);
-
-        // TODO: prototype deleting stack (and deleting VPC endpoints)
+//
+//        // TODO: prototype deleting stack (and deleting VPC endpoints)
+//        System.out.println("AT STEP: prototype deleting stack (and deleting VPC endpoints)");
+//        cfnHelper.deleteBlueprintStack(blueprintStack.getStackName());
 
         // TODO: prototype deleting created topic from the MSK cluster
         System.out.println("AT STEP: prototype deleting created topic from the MSK cluster");
         adminClient.deleteTopics(List.of(mskTestTopicName));
         adminClient.close();
 
+//        // TODO: prototype deleting created index from the OpenSearch cluster
+//        System.out.println("AT STEP: prototype deleting created index from the OpenSearch cluster");
+//        osRestClient.deleteIndex(openSearchClusterEndpointUrl, openSearchType, opensearchIndexName);
     }
 }

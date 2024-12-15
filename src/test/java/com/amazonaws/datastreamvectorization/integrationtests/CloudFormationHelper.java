@@ -102,22 +102,24 @@ public class CloudFormationHelper {
         );
     }
 
-    public String pollBlueprintStatusStatus(String stackName) throws InterruptedException {
+    public Stack pollBlueprintStatusStatus(String stackName) throws InterruptedException {
         int retryCount = 0;
-        String stackStatus = "";
+        String stackStatus;
+        Stack stack = null;
         while (retryCount++ <= MAX_POLL_STACK_STATUS_RETRIES) {
             DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackName);
             DescribeStacksResult describeStacksResult = cfnClient.describeStacks(describeStacksRequest);
-            stackStatus = describeStacksResult.getStacks().get(0).getStackStatus();
+            stack = describeStacksResult.getStacks().get(0);
+            stackStatus = stack.getStackStatus();
             if (TERMINAL_STACK_STATUSES.contains(StackStatus.fromValue(stackStatus))) {
-                return stackStatus;
+                return stack;
             }
             Thread.sleep(POLL_STACK_STATUS_DELAY);
         }
-        return stackStatus;
+        return stack;
     }
 
-    public boolean createBlueprintStack(String templateURL, String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
+    public Stack createBlueprintStack(String templateURL, String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
         String stackName = "datastream-vec-integ-test-" + testId;
 
         try {
@@ -131,17 +133,23 @@ public class CloudFormationHelper {
                     .withCapabilities(Capability.CAPABILITY_NAMED_IAM);
             cfnClient.createStack(createStackRequest);
 
-            String stackStatus = this.pollBlueprintStatusStatus(stackName);
-            return stackStatus.equals(StackStatus.CREATE_COMPLETE.toString());
+            Stack stack = this.pollBlueprintStatusStatus(stackName);
+            if (stack == null) {
+                throw new RuntimeException("Failed to create blueprint stack " + stackName);
+            }
+            if (!stack.getStackStatus().equals(StackStatus.CREATE_COMPLETE.toString())) {
+                throw new RuntimeException("Create blueprint stack ended with unsuccessful status: " + stack);
+            }
+            return stack;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create blueprint stack " + stackName, e);
         }
     }
 
-    public DeleteStackResult deleteBlueprintStack(String stackName) {
+    public void deleteBlueprintStack(String stackName) {
         this.blueprintStackCleanup(stackName);
         DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackName);
-        return cfnClient.deleteStack(deleteStackRequest);
+        cfnClient.deleteStack(deleteStackRequest);
     }
 
     public void blueprintStackCleanup(String stackName) {
