@@ -25,6 +25,8 @@ public class CloudFormationHelper {
     String testId;
     private final int MAX_POLL_STACK_STATUS_RETRIES = 15;
     private final Long POLL_STACK_STATUS_DELAY = 60000L; // 1 minute
+    private final String BEDROCK_VPC_ENDPOINT_OUTPUT_KEY = "BedrockVpcEndpoint";
+
     private final List<StackStatus> TERMINAL_STACK_STATUSES = List.of(
             StackStatus.CREATE_COMPLETE,
             StackStatus.CREATE_FAILED,
@@ -161,11 +163,11 @@ public class CloudFormationHelper {
         }
         Stack stackToCleanup = stacks.get(0);
 
-        // TODO: get parameter describing OpenSearch cluster type, or take it in as input
-//        List<Parameter> parameters = stackToCleanup.();
-//        Parameter test = parameters.getFirst();
-//        test.getParameterKey()
-        String opensearchType = "PROVISIONED";
+        int osTypeIndex = stackToCleanup.getParameters().indexOf(new Parameter().withParameterKey("OpenSearchType"));
+        if (osTypeIndex < 0) {
+            throw new RuntimeException("Expected OpenSearchType parameter to be present");
+        }
+        String opensearchType = stackToCleanup.getParameters().get(osTypeIndex).getParameterValue();
 
         List<Output> outputs = stackToCleanup.getOutputs();
         for (Output output : outputs) {
@@ -173,28 +175,26 @@ public class CloudFormationHelper {
             String outputValue = output.getOutputValue();
             String vpceId = "";
 
-            if (outputKey.equals("BedrockVpcEndpoint")) {
+            if (outputKey.equals(BEDROCK_VPC_ENDPOINT_OUTPUT_KEY)) {
                 vpceId = getBedrockVpceToDelete(outputValue);
-
-                // TODO: delete if Bedrock endpoint
                 AmazonEC2 ec2Client = AmazonEC2ClientBuilder.defaultClient();
                 DeleteVpcEndpointsRequest deleteVpcEndpointsRequest = new DeleteVpcEndpointsRequest().withVpcEndpointIds(vpceId);
                 DeleteVpcEndpointsResult deleteVpcEndpointsResult = ec2Client.deleteVpcEndpoints(deleteVpcEndpointsRequest);
             } else if (outputKey.equals("OpenSearchVpcEndpoint")) {
                 vpceId = getOpenSearchVpceToDelete(outputValue);
 
-                if (opensearchType.equals("PROVISIONED")) {
-                    // TODO: delete if Opensearch Provisioned endpoint
+                if (opensearchType.equals(OpenSearchType.PROVISIONED.toString())) {
                     AmazonOpenSearch opensearchClient = AmazonOpenSearchClientBuilder.defaultClient();
                     DeleteVpcEndpointRequest deleteVpcEndpointRequest = new DeleteVpcEndpointRequest().withVpcEndpointId(vpceId);
                     DeleteVpcEndpointResult deleteVpcEndpointResult = opensearchClient.deleteVpcEndpoint(deleteVpcEndpointRequest);
-                } else {
-                    // TODO: delete if Opensearch Serverless endpoint
+                } else if (opensearchType.equals(OpenSearchType.SERVERLESS.toString())) {
                     AWSOpenSearchServerless openSearchClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
                     com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointRequest deleteVpcEndpointRequest =
                             new com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointRequest().withId(vpceId);
                     com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointResult deleteVpcEndpointResult =
                             openSearchClient.deleteVpcEndpoint(deleteVpcEndpointRequest);
+                } else {
+                    throw new RuntimeException("Unknown OpenSearchType when cleaning up stack: " + opensearchType);
                 }
             }
         }

@@ -121,7 +121,7 @@ class BlueprintIT {
                 currentTimestamp + " integ-test-value-2",
                 currentTimestamp + " integ-test-value-3"
         );
-        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(currentTimestamp);
+        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaStringProducer(currentTimestamp);
         List<ProducerRecord<String, String>> mskRecords = testRecords
                 .stream()
                 .map(record -> new ProducerRecord<String, String>(mskTestTopicName, record))

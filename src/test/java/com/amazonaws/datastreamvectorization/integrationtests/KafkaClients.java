@@ -66,19 +66,26 @@ class KafkaClients {
         return adminClientProperties;
     }
 
-    public KafkaProducer<String, String> createKafkaProducer(String testId) {
+    public KafkaProducer<String, String> createKafkaStringProducer(String testId) {
+        Serializer<String> serializer = new StringSerializer();
+        return createKafkaProducer(testId, serializer, serializer);
+    }
+
+    public <K, V> KafkaProducer<K, V> createKafkaProducer(String testId, Serializer<K> keySerializer,
+                                                             Serializer<V> valueSerializer) {
         Properties producerProps = new Properties();
         producerProps.putAll(this.securityProperties);
         producerProps.putAll(this.producerClientProperties);
         producerProps.put(ProducerConfig.CLIENT_ID_CONFIG, CLIENT_ID + "-producer-" + testId);
 
         try {
-            Serializer<String> serializer = new StringSerializer();
-            return new KafkaProducer<>(producerProps, serializer, serializer);
+            return new KafkaProducer<>(producerProps, keySerializer, valueSerializer);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create a kafka producer.", e);
         }
     }
+
+
 
     public AdminClient createKafkaAdminClient(String testId) {
         Properties adminClientProps = new Properties();
