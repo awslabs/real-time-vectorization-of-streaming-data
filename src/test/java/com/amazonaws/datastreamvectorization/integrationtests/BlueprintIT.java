@@ -93,9 +93,9 @@ class BlueprintIT {
         String openSearchClusterType = (String) openSearchCluster.get("Type");
 
         String openSearchClusterEndpointUrl = (String) openSearchCluster.get("EndpointUrl");
-//        if (!hasValidProtocol(openSearchClusterEndpointUrl)) {
-//            openSearchClusterEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + openSearchClusterEndpointUrl;
-//        }
+        if (!hasValidProtocol(openSearchClusterEndpointUrl)) {
+            openSearchClusterEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + openSearchClusterEndpointUrl;
+        }
         System.out.println("OpenSearch cluster endpoint URL: " + openSearchClusterEndpointUrl);
 
         OpenSearchType openSearchType;
@@ -106,21 +106,6 @@ class BlueprintIT {
         } else {
             throw new RuntimeException("Unsupported OpenSearch cluster type " + openSearchClusterType);
         }
-
-        // TODO: prototype creating an index in the OpenSearch cluster
-        System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
-        OpenSearchRestClient osRestClient = new OpenSearchRestClient();
-
-        BedrockHelper bedrockHelper = new BedrockHelper();
-        EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
-
-        String opensearchIndexName = "integ-os-index-" + currentTimestamp;
-
-        osRestClient.createIndex(
-                openSearchClusterEndpointUrl,
-                openSearchType,
-                opensearchIndexName,
-                embeddingModel);
 
         // TODO: prototype producing to the MSK cluster
         System.out.println("AT STEP: prototype producing to the MSK cluster");
@@ -138,18 +123,32 @@ class BlueprintIT {
             kafkaProducer.send(record);
         }
 
-//        // TODO: prototype deploying blueprint stack
-//        System.out.println("AT STEP: prototype deploying blueprint stack");
-//        String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
-//        CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
+        // TODO: prototype deploying blueprint stack
+        System.out.println("AT STEP: prototype deploying blueprint stack");
+        String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
+        CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
 //        Stack blueprintStack = cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
 //        System.out.println("Stack creation succeeded: " + blueprintStack);
 //
-//        // TODO: prototype adding blueprint IAM role as OpenSearch master user
-//        System.out.println("AT STEP: prototype adding blueprint IAM role as OpenSearch master user");
-//        OpenSearchHelper osHelper = new OpenSearchHelper();
-//        osHelper.addMasterUserIAMRole(openSearchClusterName, openSearchType, cfnHelper.buildStackRoleName());
-//
+        // TODO: prototype adding blueprint IAM role as OpenSearch master user
+        System.out.println("AT STEP: prototype adding blueprint IAM role as OpenSearch master user");
+        OpenSearchHelper osHelper = new OpenSearchHelper();
+        osHelper.addMasterUserIAMRole(openSearchClusterName, openSearchType, cfnHelper.buildStackRoleName());
+
+        // TODO: prototype creating an index in the OpenSearch cluster
+        System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
+        OpenSearchRestClient osRestClient = new OpenSearchRestClient();
+
+        BedrockHelper bedrockHelper = new BedrockHelper();
+        EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
+
+        String opensearchIndexName = "integ-os-index-" + currentTimestamp;
+
+        osRestClient.createIndex(
+                openSearchClusterEndpointUrl,
+                openSearchType,
+                opensearchIndexName,
+                embeddingModel);
 //        // TODO: prototype updating MSF app config
 //        System.out.println("AT STEP: prototype updating MSF app config");
 //        MSFHelper msfHelper = new MSFHelper();
