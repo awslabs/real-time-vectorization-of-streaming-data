@@ -192,12 +192,8 @@ public class OpenSearchRestClient {
                 DefaultCredentialsProvider.create(),
                 Region.of(this.region));
 
-//        RestClientBuilder restClientBuilder = RestClient.builder(
-//                        new HttpHost(openSearchEndpoint, 443, "https"))
-//                .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)
-//                );
         RestClientBuilder restClientBuilder = RestClient.builder(
-                        new HttpHost(openSearchEndpoint))
+                        new HttpHost(openSearchEndpoint, 443, "https"))
                 .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)
                 );
 
