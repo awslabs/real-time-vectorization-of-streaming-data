@@ -93,9 +93,9 @@ class BlueprintIT {
         String openSearchClusterType = (String) openSearchCluster.get("Type");
 
         String openSearchClusterEndpointUrl = (String) openSearchCluster.get("EndpointUrl");
-//        if (!hasValidProtocol(openSearchClusterEndpointUrl)) {
-//            openSearchClusterEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + openSearchClusterEndpointUrl;
-//        }
+        if (!hasValidProtocol(openSearchClusterEndpointUrl)) {
+            openSearchClusterEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + openSearchClusterEndpointUrl;
+        }
         System.out.println("OpenSearch cluster endpoint URL: " + openSearchClusterEndpointUrl);
 
         OpenSearchType openSearchType;

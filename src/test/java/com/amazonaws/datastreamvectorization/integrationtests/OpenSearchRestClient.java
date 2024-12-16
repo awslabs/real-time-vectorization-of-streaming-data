@@ -70,7 +70,7 @@ public class OpenSearchRestClient {
             // send the create index request
             return client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
         } catch (Exception e) {
-            throw new RuntimeException("Error when creating the OpenSearch index" + indexName + ": ", e);
+            throw new RuntimeException("Error when creating the OpenSearch index " + indexName + ": ", e);
         }
     }
 
@@ -192,8 +192,12 @@ public class OpenSearchRestClient {
                 DefaultCredentialsProvider.create(),
                 Region.of(this.region));
 
+//        RestClientBuilder restClientBuilder = RestClient.builder(
+//                        new HttpHost(openSearchEndpoint, 443, "https"))
+//                .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)
+//                );
         RestClientBuilder restClientBuilder = RestClient.builder(
-                        new HttpHost(openSearchEndpoint, 443, "https"))
+                        new HttpHost(openSearchEndpoint))
                 .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)
                 );
 
