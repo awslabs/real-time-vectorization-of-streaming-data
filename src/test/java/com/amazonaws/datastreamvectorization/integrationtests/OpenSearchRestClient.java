@@ -32,6 +32,8 @@ import software.amazon.awssdk.regions.Region;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.amazonaws.services.cloudfront.util.SignerUtils.Protocol.https;
+
 @Slf4j
 public class OpenSearchRestClient {
     private final String region;
@@ -191,7 +193,7 @@ public class OpenSearchRestClient {
                 Region.of(this.region));
 
         RestClientBuilder restClientBuilder = RestClient.builder(
-                        HttpHost.create(openSearchEndpoint))
+                        new HttpHost(openSearchEndpoint, 443, "https"))
                 .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)
                 );
 
