@@ -43,6 +43,9 @@ import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 
+import static com.amazonaws.datastreamvectorization.datasink.model.OpenSearchDataSinkConfiguration.DEFAULT_ENDPOINT_PROTOCOL;
+import static com.amazonaws.datastreamvectorization.utils.ValidationUtils.hasValidProtocol;
+
 class BlueprintIT {
 
     @Test
@@ -88,8 +91,13 @@ class BlueprintIT {
         JSONObject openSearchCluster = (JSONObject) testInputJson.get("OpenSearchCluster");
         String openSearchClusterName = (String) openSearchCluster.get("Name");
         String openSearchClusterType = (String) openSearchCluster.get("Type");
+
         String openSearchClusterEndpointUrl = (String) openSearchCluster.get("EndpointUrl");
+        if (!hasValidProtocol(openSearchClusterEndpointUrl)) {
+            openSearchClusterEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + openSearchClusterEndpointUrl;
+        }
         System.out.println("OpenSearch cluster endpoint URL: " + openSearchClusterEndpointUrl);
+
         OpenSearchType openSearchType;
         if (openSearchClusterType.equals("PROVISIONED")) {
             openSearchType = OpenSearchType.PROVISIONED;
@@ -146,6 +154,7 @@ class BlueprintIT {
 //        System.out.println("AT STEP: prototype updating MSF app config");
 //        MSFHelper msfHelper = new MSFHelper();
 //        String msfAppName = cfnHelper.buildStackAppName();
+//        msfHelper.updateMSFAppDefault(msfAppName);
 //        msfHelper.updateMSFAppDefault(msfAppName);
 //
 //        // TODO: prototype starting MSF app
