@@ -108,20 +108,20 @@ class BlueprintIT {
         }
 
         // TODO: prototype producing to the MSK cluster
-        System.out.println("AT STEP: prototype producing to the MSK cluster");
-        List<String> testRecords = List.of(
-                currentTimestamp + " integ-test-value-1",
-                currentTimestamp + " integ-test-value-2",
-                currentTimestamp + " integ-test-value-3"
-        );
-        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaStringProducer(currentTimestamp);
-        List<ProducerRecord<String, String>> mskRecords = testRecords
-                .stream()
-                .map(record -> new ProducerRecord<String, String>(mskTestTopicName, record))
-                .collect(Collectors.toList());
-        for (ProducerRecord<String, String> record : mskRecords) {
-            kafkaProducer.send(record);
-        }
+//        System.out.println("AT STEP: prototype producing to the MSK cluster");
+//        List<String> testRecords = List.of(
+//                currentTimestamp + " integ-test-value-1",
+//                currentTimestamp + " integ-test-value-2",
+//                currentTimestamp + " integ-test-value-3"
+//        );
+//        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaStringProducer(currentTimestamp);
+//        List<ProducerRecord<String, String>> mskRecords = testRecords
+//                .stream()
+//                .map(record -> new ProducerRecord<String, String>(mskTestTopicName, record))
+//                .collect(Collectors.toList());
+//        for (ProducerRecord<String, String> record : mskRecords) {
+//            kafkaProducer.send(record);
+//        }
 
         // TODO: prototype deploying blueprint stack
 //        System.out.println("AT STEP: prototype deploying blueprint stack");
