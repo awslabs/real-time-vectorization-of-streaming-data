@@ -117,7 +117,12 @@ under the License.
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
-			<version>1.12.769</version>
+			<version>1.12.339</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>aws-core</artifactId>
+			<version>${aws.java.sdk.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>

@@ -71,8 +71,12 @@
           <skipITs>${skipITs}</skipITs>
           <systemProperties>
             <property>
-              <name>integTestInputsFileName</name>
-              <value>${integTestInputsFileName}</value>
+              <name>integTestInputsFile</name>
+              <value>${integTestInputsFile}</value>
+            </property>
+            <property>
+              <name>blueprintCDKTemplateURL</name>
+              <value>${blueprintCDKTemplateURL}</value>
             </property>
           </systemProperties>
         </configuration>
@@ -450,6 +454,8 @@
   <properties>
     <scala.binary.version>2.12</scala.binary.version>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
+    <blueprintCDKTemplateURL>BootstrapCdkStack.template.json</blueprintCDKTemplateURL>
+    <integTestInputsFile>integ-test-inputs.json</integTestInputsFile>
     <junit.jupiter.version>5.9.2</junit.jupiter.version>
     <skipUTs>false</skipUTs>
     <flink.version>1.18.1</flink.version>
@@ -460,7 +466,6 @@
     <skipITs>true</skipITs>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j.version>2.17.1</log4j.version>
-    <integTestInputsFileName>integ-test-inputs.json</integTestInputsFileName>
     <target.java.version>11</target.java.version>
     <kda.runtime.version>1.2.0</kda.runtime.version>
   </properties>
