@@ -124,16 +124,16 @@ class BlueprintIT {
         }
 
         // TODO: prototype deploying blueprint stack
-        System.out.println("AT STEP: prototype deploying blueprint stack");
-        String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
-        CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
+//        System.out.println("AT STEP: prototype deploying blueprint stack");
+//        String blueprintCDKTemplateURL = System.getProperty("blueprintCDKTemplateURL");
+//        CloudFormationHelper cfnHelper = new CloudFormationHelper(currentTimestamp);
 //        Stack blueprintStack = cfnHelper.createBlueprintStack(blueprintCDKTemplateURL, mskClusterArn, openSearchClusterName, openSearchType);
 //        System.out.println("Stack creation succeeded: " + blueprintStack);
 //
         // TODO: prototype adding blueprint IAM role as OpenSearch master user
-        System.out.println("AT STEP: prototype adding blueprint IAM role as OpenSearch master user");
-        OpenSearchHelper osHelper = new OpenSearchHelper();
-        osHelper.addMasterUserIAMRole(openSearchClusterName, openSearchType, cfnHelper.buildStackRoleName());
+//        System.out.println("AT STEP: prototype adding blueprint IAM role as OpenSearch master user");
+//        OpenSearchHelper osHelper = new OpenSearchHelper();
+//        osHelper.addMasterUserIAMRole(openSearchClusterName, openSearchType, cfnHelper.buildStackRoleName());
 
         // TODO: prototype creating an index in the OpenSearch cluster
         System.out.println("AT STEP: prototype creating an index in the OpenSearch cluster");
