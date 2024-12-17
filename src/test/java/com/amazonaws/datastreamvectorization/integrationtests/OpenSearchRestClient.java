@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
 import org.junit.jupiter.api.Assertions;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestClientBuilder;
@@ -22,7 +24,11 @@ import org.opensearch.client.RestHighLevelClient;
 //import org.opensearch.client.transport.aws.AwsSdk2TransportOptions;
 import org.opensearch.client.indices.CreateIndexRequest;
 import org.opensearch.client.indices.CreateIndexResponse;
+import org.opensearch.client.opensearch.indices.DeleteIndexRequest;
+import org.opensearch.client.opensearch.indices.DeleteIndexResponse;
 import org.opensearch.common.settings.Settings;
+import org.opensearch.search.SearchHit;
+import org.opensearch.search.aggregations.Aggregation;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.signer.Aws4Signer;
 import software.amazon.awssdk.http.SdkHttpClient;
@@ -79,6 +85,17 @@ public class OpenSearchRestClient {
             throw new RuntimeException("Error when creating the OpenSearch index " + indexName + ": ", e);
         }
     }
+
+//    public DeleteIndexResponse deleteIndex(String openSearchEndpoint, OpenSearchType openSearchType, String indexName, EmbeddingModel embeddingModel) {
+//        try (RestHighLevelClient client = getRestHighLevelClient(openSearchEndpoint, openSearchType)) {
+//            DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest();
+//
+//            // send the create index request
+//            return client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Error when creating the OpenSearch index " + indexName + ": ", e);
+//        }
+//    }
 
 //    public CreateIndexResponse createIndex(String openSearchEndpoint, OpenSearchType openSearchType, String indexName, EmbeddingModel embeddingModel) {
 //        try (SdkHttpClient httpClient = createHttpClient()) {
@@ -155,21 +172,17 @@ public class OpenSearchRestClient {
 //        }
 //    }
 
-    // TODO: move this to a new "integ test base" class
-    public void validateOpenSearchRecords(List<String> expectedOriginalDataList, List<OpenSearchIndexDocument> searchResult) {
-        if (searchResult.size() != expectedOriginalDataList.size()) {
-            log.info("Did not find expected number of records in OpenSearch search result. " +
-                    "Expected {} records but got {}", expectedOriginalDataList.size(), searchResult.size());
+    public void queryIndexRecords(OpenSearchType openSearchType, String indexName, String openSearchEndpoint) {
+        try (RestHighLevelClient client = getRestHighLevelClient(openSearchEndpoint, openSearchType)) {
+            SearchRequest searchRequest = new SearchRequest(indexName);
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            SearchHit[] hits = searchResponse.getHits().getHits();
+            for (SearchHit hit : hits) {
+                System.out.println(hit.field("original_data"));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error when querying the OpenSearch index " + indexName + ": ", e);
         }
-
-        List<String> resultOriginalDataList = searchResult
-                .stream()
-                .map(OpenSearchIndexDocument::getOriginal_data)
-                .sorted().
-                collect(Collectors.toList());
-
-        Collections.sort(expectedOriginalDataList);
-        Assertions.assertEquals(expectedOriginalDataList, resultOriginalDataList);
     }
 
     private SdkHttpClient createHttpClient() {
@@ -204,5 +217,21 @@ public class OpenSearchRestClient {
                 );
 
         return new RestHighLevelClient(restClientBuilder);
+    }
+
+    // TODO: remove later from here
+    public void validateOpenSearchRecords(List<String> expectedOriginalDataList, List<OpenSearchIndexDocument> searchResult) {
+        if (searchResult.size() != expectedOriginalDataList.size()) {
+            log.info("Did not find expected number of records in OpenSearch search result. " +
+                    "Expected {} records but got {}", expectedOriginalDataList.size(), searchResult.size());
+        }
+        List<String> resultOriginalDataList = searchResult
+                .stream()
+                .map(OpenSearchIndexDocument::getOriginal_data)
+                .sorted().
+                collect(Collectors.toList());
+
+        Collections.sort(expectedOriginalDataList);
+        Assertions.assertEquals(expectedOriginalDataList, resultOriginalDataList);
     }
 }
