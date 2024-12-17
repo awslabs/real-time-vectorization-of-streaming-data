@@ -60,12 +60,15 @@ public class OpenSearchRestClient {
             embeddedData.put("dimension", embeddingModel.getModelDefaultDimensions());
             embeddedData.put("method", method);
 
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("embedded_data", embeddedData);
+
             // build the create index request
             CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
             createIndexRequest.settings(Settings.builder()
                     .put("index.knn", true)
             );
-            createIndexRequest.mapping(embeddedData);
+            createIndexRequest.mapping(properties);
 
             // send the create index request
             return client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
