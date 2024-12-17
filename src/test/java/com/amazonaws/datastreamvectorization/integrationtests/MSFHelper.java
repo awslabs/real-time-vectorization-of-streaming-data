@@ -93,8 +93,7 @@ public class MSFHelper {
         }
 
         OpenSearchHelper openSearchHelper = new OpenSearchHelper();
-        String crossVpcEndpointURL = openSearchHelper.getCrossVpcEndpoint(osClusterName,
-                OpenSearchType.valueOf(osClusterType), msfAppVpcId);
+        String crossVpcEndpointURL = openSearchHelper.getCrossVpcEndpoint(osClusterName, msfAppVpcId);
 
         Map<String, String> runtimePropertiesMap = Map.ofEntries(entry(PROPERTY_OS_ENDPOINT, crossVpcEndpointURL));
 

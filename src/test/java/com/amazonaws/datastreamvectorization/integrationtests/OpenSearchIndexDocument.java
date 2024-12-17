@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Model for expected record structure from OpenSearch vector index
+ */
 @AllArgsConstructor
 @Getter
 @Setter

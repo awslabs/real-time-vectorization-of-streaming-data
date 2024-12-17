@@ -68,7 +68,7 @@ public class CloudFormationHelper {
         System.out.println(mskClusterData);
 
         OpenSearchHelper osHelper = new OpenSearchHelper();
-        OpenSearchClusterData osClusterData = osHelper.getOpenSearchClusterData(osClusterName, osClusterType, testId);
+        OpenSearchClusterBlueprintData osClusterData = osHelper.getOpenSearchClusterBlueprintData(osClusterName, osClusterType, testId);
         System.out.println("osClusterData:");
         System.out.println(osClusterData);
 

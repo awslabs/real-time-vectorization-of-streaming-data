@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class OpenSearchClusterData {
+public class OpenSearchClusterBlueprintData {
     String OpenSearchCollectionName;
     String OpenSearchEndpointURL;
     String OpenSearchType;

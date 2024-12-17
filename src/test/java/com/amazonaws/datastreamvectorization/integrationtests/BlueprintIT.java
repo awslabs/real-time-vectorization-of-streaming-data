@@ -32,6 +32,7 @@ import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
@@ -65,11 +66,25 @@ class BlueprintIT {
         } catch (IOException e) {
             throw new RuntimeException("Could not read test input file " + testInputFile, e);
         }
+        JSONArray testCaseInputs = (JSONArray) testInputJson.get("TestCases");
+        JSONObject prototypeTestCase = (JSONObject) testCaseInputs.get(0);
+        String testCaseName = (String) prototypeTestCase.get("TestName");
+        JSONObject testCaseMSKCluster = (JSONObject) prototypeTestCase.get("MskCluster");
+        JSONObject testCaseOpenSearchCluster = (JSONObject) prototypeTestCase.get("OpenSearchCluster");
+        System.out.println("TEST CASE NAME: " + testCaseName);
+        String mskClusterArn = (String) testCaseMSKCluster.get("ARN");
+        System.out.println("MSK CLUSTER ARN: " + mskClusterArn);
+        String openSearchClusterName = (String) testCaseOpenSearchCluster.get("Name");
+        String openSearchClusterType = (String) testCaseOpenSearchCluster.get("Type");
+        String openSearchClusterEndpointUrl = (String) testCaseOpenSearchCluster.get("EndpointUrl");
+//        if (!hasValidProtocol(openSearchClusterEndpointUrl)) {
+//            openSearchClusterEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + openSearchClusterEndpointUrl;
+//        }
+        System.out.println("OpenSearch cluster endpoint URL: " + openSearchClusterEndpointUrl);
+
 
         // TODO: prototype get MSK cluster info
         System.out.println("AT STEP: prototype get MSK cluster info");
-        JSONObject mskServerlessPrivateVPC = (JSONObject) testInputJson.get("MSKServerlessPrivateVPC");
-        String mskClusterArn = (String) mskServerlessPrivateVPC.get("MSKClusterArn");
         AWSKafka mskClient = AWSKafkaClientBuilder.defaultClient();
         GetBootstrapBrokersRequest bookstrapBrokersRequest = new GetBootstrapBrokersRequest();
         GetBootstrapBrokersResult bookstrapBrokersResult = mskClient.getBootstrapBrokers(bookstrapBrokersRequest.withClusterArn(mskClusterArn));
@@ -88,15 +103,6 @@ class BlueprintIT {
 
         // TODO: prototype get OpenSearch cluster info
         System.out.println("AT STEP: prototype get OpenSearch cluster info");
-        JSONObject openSearchCluster = (JSONObject) testInputJson.get("OpenSearchCluster");
-        String openSearchClusterName = (String) openSearchCluster.get("Name");
-        String openSearchClusterType = (String) openSearchCluster.get("Type");
-
-        String openSearchClusterEndpointUrl = (String) openSearchCluster.get("EndpointUrl");
-//        if (!hasValidProtocol(openSearchClusterEndpointUrl)) {
-//            openSearchClusterEndpointUrl = DEFAULT_ENDPOINT_PROTOCOL + openSearchClusterEndpointUrl;
-//        }
-        System.out.println("OpenSearch cluster endpoint URL: " + openSearchClusterEndpointUrl);
 
         OpenSearchType openSearchType;
         if (openSearchClusterType.equals("PROVISIONED")) {

@@ -1,19 +1,18 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
 import com.amazonaws.services.bedrock.AmazonBedrock;
 import com.amazonaws.services.bedrock.AmazonBedrockClientBuilder;
 import com.amazonaws.services.bedrock.model.GetFoundationModelRequest;
 import com.amazonaws.services.bedrock.model.GetFoundationModelResult;
 import com.amazonaws.services.bedrock.model.ValidationException;
-import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
 import lombok.extern.slf4j.Slf4j;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
 import java.util.List;
 
+/**
+ * Helper class to interact with Amazon Bedrock
+ */
 @Slf4j
 public class BedrockHelper {
     private static final List<EmbeddingModel> EMBEDDING_MODELS = List.of(
@@ -23,27 +22,25 @@ public class BedrockHelper {
             EmbeddingModel.COHERE_EMBED_ENGLISH,
             EmbeddingModel.COHERE_EMBED_MULTILINGUAL
     );
-
-    AmazonBedrock bedrockClient;
+    private final AmazonBedrock bedrockClient;
 
     public BedrockHelper() {
-        // TODO: investigate how to get below working to avoid INFO log (low priority, it's not even WARN):
-        //  {bedrock, us-east-1} was not found in region metadata, trying to construct an endpoint using the standard pattern for this region: 'bedrock.us-east-1.amazonaws.com'.
-//        String region = AmazonBedrockClientBuilder.standard().getRegion();
-//
-//        bedrockClient = AmazonBedrockClientBuilder
-//                .standard()
-//                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("bedrock", region))
-//                .build();
         bedrockClient = AmazonBedrockClientBuilder.defaultClient();
     }
 
+    /**
+     * Finds a Bedrock model supported by the real time vectorization of streaming data application
+     * that is available in the current AWS region. Will return the first model found that is available.
+     * Throws exception if no supported models are available in the region.
+     * @return EmbeddingModel available in the region
+     */
     public EmbeddingModel getSupportedEmbeddingModel() {
         for (EmbeddingModel model : EMBEDDING_MODELS) {
             try {
                 GetFoundationModelRequest getFoundationModelRequest = new GetFoundationModelRequest()
                         .withModelIdentifier(model.getModelId());
-                GetFoundationModelResult getFoundationModelResult = bedrockClient.getFoundationModel(getFoundationModelRequest);
+                GetFoundationModelResult getFoundationModelResult = bedrockClient
+                        .getFoundationModel(getFoundationModelRequest);
                 if (model.getModelId().equals(getFoundationModelResult.getModelDetails().getModelId())) {
                     return model;
                 }
