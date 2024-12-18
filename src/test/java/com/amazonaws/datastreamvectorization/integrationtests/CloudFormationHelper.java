@@ -6,6 +6,8 @@ import com.amazonaws.datastreamvectorization.integrationtests.model.MSKClusterBl
 import com.amazonaws.datastreamvectorization.integrationtests.model.MskClusterConfig;
 import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterBlueprintParameters;
 import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterConfig;
+import com.amazonaws.regions.AwsRegionProvider;
+import com.amazonaws.regions.DefaultAwsRegionProviderChain;
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
 import com.amazonaws.services.cloudformation.model.*;
@@ -386,7 +388,9 @@ public class CloudFormationHelper {
      * @return StackAssetBucketName parameter value
      */
     private String buildStackAssetBucketName(String testID) {
-        return "integ-test-app-" + testID + "-bucket";
+        String testIDHash = String.valueOf(testID.hashCode()); // to reduce bucket name length
+        String region = (new DefaultAwsRegionProviderChain()).getRegion();
+        return String.join("-", "integ-test-app", testIDHash, region, "bucket");
     }
 
 }
