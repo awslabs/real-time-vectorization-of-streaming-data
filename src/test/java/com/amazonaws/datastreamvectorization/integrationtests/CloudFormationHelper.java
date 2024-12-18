@@ -82,7 +82,7 @@ public class CloudFormationHelper {
         try {
             // URL encode the template URL string
             System.out.println("Stack template URL raw: " + templateURL);
-            AmazonS3URI templateS3URI = new AmazonS3URI(templateURL);
+            AmazonS3URI templateS3URI = new AmazonS3URI(templateURL, true);
             String encodedTemplateURL = templateS3URI.toString();
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
@@ -224,7 +224,14 @@ public class CloudFormationHelper {
         return stack;
     }
 
+    /**
+     * Clean up the external stack resources. Checks for stack outputs and deletes VPC endpoints if the outputs
+     * indicate that they were created by the stack.
+     *
+     * @param stackName The name of the stack to delete external resources for
+     */
     public void blueprintStackCleanup(String stackName) {
+        // get the stack to clean up
         DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackName);
         DescribeStacksResult describeStacksResults = cfnClient.describeStacks(describeStacksRequest);
         List<Stack> stacks = describeStacksResults.getStacks();
@@ -233,11 +240,7 @@ public class CloudFormationHelper {
         }
         Stack stackToCleanup = stacks.get(0);
 
-        int osTypeIndex = stackToCleanup.getParameters().indexOf(new Parameter().withParameterKey("OpenSearchType"));
-        if (osTypeIndex < 0) {
-            throw new RuntimeException("Expected OpenSearchType parameter to be present");
-        }
-        String opensearchType = stackToCleanup.getParameters().get(osTypeIndex).getParameterValue();
+        String opensearchType = getParameterValue(stackToCleanup, PARAM_OPEN_SEARCH_TYPE);
 
         List<Output> outputs = stackToCleanup.getOutputs();
         for (Output output : outputs) {
