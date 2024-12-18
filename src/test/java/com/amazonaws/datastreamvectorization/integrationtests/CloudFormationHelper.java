@@ -21,20 +21,21 @@ import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
 import com.amazonaws.services.s3.AmazonS3URI;
 
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BlueprintParameterKeys.*;
 
+/**
+ * Helper class to interact with Amazon CloudFormation
+ */
 public class CloudFormationHelper {
     AmazonCloudFormation cfnClient;
-    String testId;
     private final int MAX_POLL_STACK_STATUS_RETRIES = 15;
     private final Long POLL_STACK_STATUS_DELAY = 60000L; // 1 minute
     private final String BEDROCK_VPC_ENDPOINT_OUTPUT_KEY = "BedrockVpcEndpoint";
-
+    private final String OPENSEARCH_ENDPOINT_OUTPUT_KEY = "OpenSearchVpcEndpoint";
     private final List<StackStatus> TERMINAL_STACK_STATUSES = List.of(
             StackStatus.CREATE_COMPLETE,
             StackStatus.CREATE_FAILED,
@@ -48,6 +49,13 @@ public class CloudFormationHelper {
         cfnClient = AmazonCloudFormationClientBuilder.defaultClient();
     }
 
+    /**
+     * Find the value of a parameter by key from the given stack.
+     *
+     * @param stack Stack to look for parameters from
+     * @param parameterKey The key of the parameter to look for
+     * @return String value of the parameter associated with the given key
+     */
     public String getParameterValue(Stack stack, String parameterKey) {
         int parameterIndex = stack.getParameters().indexOf(new Parameter().withParameterKey(parameterKey));
         if (parameterIndex < 0) {
@@ -56,17 +64,29 @@ public class CloudFormationHelper {
         return stack.getParameters().get(parameterIndex).getParameterValue();
     }
 
-    public Stack createBlueprintStack(String templateURL, MskClusterConfig mskCluster, OpenSearchClusterConfig osCluster, String testID) {
+    /**
+     * Creates (deploys) the blueprint stack. Will wait for a terminal stack status to be reached before returning,
+     * such as CREATE_COMPLETE and CREATE_FAILED, until a max timeout is reached.
+     *
+     * @param templateURL The S3 template URL of the blueprint CDK template to deploy
+     * @param mskCluster MskClusterConfig MSK cluster information
+     * @param osCluster OpenSearchClusterConfig OpenSearch cluster information
+     * @param testID ID string for the test
+     * @return Stack that was deployed
+     */
+    public Stack createBlueprintStack(String templateURL,
+                                      MskClusterConfig mskCluster,
+                                      OpenSearchClusterConfig osCluster,
+                                      String testID) {
         String stackName = buildStackName(testID);
-
         try {
+            // URL encode the template URL string
             System.out.println("Stack template URL raw: " + templateURL);
             AmazonS3URI templateS3URI = new AmazonS3URI(templateURL);
             String encodedTemplateURL = templateS3URI.toString();
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
-            List<Parameter> stackParameters = getBlueprintParameters(mskCluster, osCluster, testId);
-
+            List<Parameter> stackParameters = getBlueprintParameters(mskCluster, osCluster, testID);
             CreateStackRequest createStackRequest = new CreateStackRequest()
                     .withTemplateURL(encodedTemplateURL)
                     .withStackName(stackName)
@@ -181,7 +201,7 @@ public class CloudFormationHelper {
                 AmazonEC2 ec2Client = AmazonEC2ClientBuilder.defaultClient();
                 DeleteVpcEndpointsRequest deleteVpcEndpointsRequest = new DeleteVpcEndpointsRequest().withVpcEndpointIds(vpceId);
                 DeleteVpcEndpointsResult deleteVpcEndpointsResult = ec2Client.deleteVpcEndpoints(deleteVpcEndpointsRequest);
-            } else if (outputKey.equals("OpenSearchVpcEndpoint")) {
+            } else if (outputKey.equals(OPENSEARCH_ENDPOINT_OUTPUT_KEY)) {
                 vpceId = getOpenSearchVpceToDelete(outputValue);
 
                 if (opensearchType.equals(OpenSearchType.PROVISIONED.toString())) {

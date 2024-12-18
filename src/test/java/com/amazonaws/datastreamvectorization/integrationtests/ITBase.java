@@ -26,6 +26,8 @@ import static com.amazonaws.datastreamvectorization.integrationtests.constants.I
 @Slf4j
 public class ITBase {
 
+    // TODO: test case needs to do certain cleanup even if test fails in the middle
+    //  For example, clean up MSK topic and OpenSearch index if stack deployment fails
     public void runTestCase(ITCaseInput testCaseInput) {
         String testID = this.generateTestID(testCaseInput.getTestName());
         MskClusterConfig mskClusterConfig = testCaseInput.getMskCluster();
