@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,6 +40,7 @@ public class BlueprintIT {
         // read test inputs JSON into ITTestInputs class object
         try {
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.UPPER_CAMEL_CASE);
             return objectMapper.readValue(testInputJson.toString(), ITTestInputs.class);
         } catch (Exception e) {
             throw new RuntimeException("Error reading test input JSON into ITTestInputs class: ", e);

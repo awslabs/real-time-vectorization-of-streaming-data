@@ -1,5 +1,6 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
+import com.amazonaws.datastreamvectorization.integrationtests.model.MSKClusterBlueprintParameters;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;

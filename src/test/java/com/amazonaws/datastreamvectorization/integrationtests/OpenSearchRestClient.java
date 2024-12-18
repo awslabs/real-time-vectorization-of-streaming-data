@@ -27,6 +27,9 @@ import software.amazon.awssdk.regions.Region;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Uses the OpenSearch RestHighLevelClient to interact with OpenSearch clusters
+ */
 @Slf4j
 public class OpenSearchRestClient {
     private final String region;
@@ -105,12 +108,14 @@ public class OpenSearchRestClient {
     }
 
     /**
-     * Queries the OpenSearc
-     * @param openSearchEndpointUrl
-     * @param openSearchType
-     * @param indexName
+     * Queries the OpenSearch cluster index and returns all the SearchHits found.
+     *
+     * @param openSearchEndpointUrl The endpoint URL of the OpenSearch cluster to connect to
+     * @param openSearchType The type of the OpenSearch cluster
+     * @param indexName The name of the index to query
+     * @return Array of SearchHits found
      */
-    public void queryIndexRecords(String openSearchEndpointUrl,
+    public SearchHit[] queryIndexRecords(String openSearchEndpointUrl,
                                   OpenSearchType openSearchType,
                                   String indexName) {
         try (RestHighLevelClient client = getRestHighLevelClient(openSearchEndpointUrl, openSearchType)) {
@@ -120,11 +125,19 @@ public class OpenSearchRestClient {
             for (SearchHit hit : hits) {
                 System.out.println(hit.field("original_data"));
             }
+            return hits;
         } catch (Exception e) {
             throw new RuntimeException("Error when querying the OpenSearch index " + indexName + ": ", e);
         }
     }
 
+    /**
+     * Creates the Closable RestHighLevelClient that can interact with OpenSearch
+     *
+     * @param openSearchEndpointUrl The endpoint URL of the OpenSearch cluster to connect to
+     * @param openSearchType The type of the OpenSearch cluster
+     * @return RestHighLevelClient
+     */
     private RestHighLevelClient getRestHighLevelClient(String openSearchEndpointUrl, OpenSearchType openSearchType) {
         HttpRequestInterceptor interceptor = new AwsRequestSigningApacheInterceptor(
                 openSearchType.getServiceName(),

@@ -1,6 +1,7 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
+import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterBlueprintParameters;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagement;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
 import com.amazonaws.services.identitymanagement.model.GetRoleRequest;
@@ -18,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+/**
+ * Helper class to interact with Amazon OpenSearch
+ */
 public class OpenSearchHelper {
 
     public OpenSearchHelper() {}

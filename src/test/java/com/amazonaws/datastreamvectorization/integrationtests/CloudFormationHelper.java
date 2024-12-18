@@ -2,7 +2,9 @@ package com.amazonaws.datastreamvectorization.integrationtests;
 
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
+import com.amazonaws.datastreamvectorization.integrationtests.model.MSKClusterBlueprintParameters;
 import com.amazonaws.datastreamvectorization.integrationtests.model.MskClusterConfig;
+import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterBlueprintParameters;
 import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterConfig;
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
@@ -107,16 +109,16 @@ public class CloudFormationHelper {
             new Parameter().withParameterKey(PARAM_SOURCE_TYPE).withParameterValue("MSK"),
             new Parameter().withParameterKey(PARAM_SOURCE_DATA_TYPE).withParameterValue("STRING"),
             new Parameter().withParameterKey(PARAM_SINK_TYPE).withParameterValue("OPENSEARCH"),
-            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_NAME).withParameterValue(mskClusterParams.MSKClusterName),
-            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_ARN).withParameterValue(mskClusterParams.MSKClusterArn),
-            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_SUBNET_IDS).withParameterValue(mskClusterParams.MSKClusterSubnetIds),
-            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_SECURITY_GROUP_IDS).withParameterValue(mskClusterParams.MSKClusterSecurityGroupIds),
-            new Parameter().withParameterKey(PARAM_MSK_TOPICS).withParameterValue(mskClusterParams.MSKTopics),
-            new Parameter().withParameterKey(PARAM_MSK_VPC_ID).withParameterValue(mskClusterParams.MSKVpcId),
-            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_COLLECTION_NAME).withParameterValue(osClusterParams.OpenSearchCollectionName),
-            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_ENDPOINT_URL).withParameterValue(osClusterParams.OpenSearchEndpointURL),
-            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_TYPE).withParameterValue(osClusterParams.OpenSearchType),
-            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_INDEX_NAME).withParameterValue(osClusterParams.OpenSearchVectorIndexName),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_NAME).withParameterValue(mskClusterParams.getMSKClusterName()),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_ARN).withParameterValue(mskClusterParams.getMSKClusterArn()),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_SUBNET_IDS).withParameterValue(mskClusterParams.getMSKClusterSubnetIds()),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_SECURITY_GROUP_IDS).withParameterValue(mskClusterParams.getMSKClusterSecurityGroupIds()),
+            new Parameter().withParameterKey(PARAM_MSK_TOPICS).withParameterValue(mskClusterParams.getMSKTopics()),
+            new Parameter().withParameterKey(PARAM_MSK_VPC_ID).withParameterValue(mskClusterParams.getMSKVpcId()),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_COLLECTION_NAME).withParameterValue(osClusterParams.getOpenSearchCollectionName()),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_ENDPOINT_URL).withParameterValue(osClusterParams.getOpenSearchEndpointURL()),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_TYPE).withParameterValue(osClusterParams.getOpenSearchType()),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_INDEX_NAME).withParameterValue(osClusterParams.getOpenSearchVectorIndexName()),
             new Parameter().withParameterKey(PARAM_EMBEDDING_MODEL_NAME).withParameterValue(embeddingModel.getModelId()),
             new Parameter().withParameterKey(PARAM_JSON_KEYS_TO_EMBED).withParameterValue(".*"),
             new Parameter().withParameterKey(PARAM_APP_NAME).withParameterValue(this.buildStackAppName(testID)),
