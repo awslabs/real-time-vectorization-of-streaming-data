@@ -3,8 +3,10 @@ package com.amazonaws.datastreamvectorization.integrationtests.model;
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter

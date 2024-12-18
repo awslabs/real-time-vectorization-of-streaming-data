@@ -86,6 +86,7 @@ public class CloudFormationHelper {
             String encodedTemplateURL = templateS3URI.toString();
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
+            // get parameters and deploy the stack
             List<Parameter> stackParameters = getBlueprintParameters(mskCluster, osCluster, testID);
             CreateStackRequest createStackRequest = new CreateStackRequest()
                     .withTemplateURL(encodedTemplateURL)
@@ -94,12 +95,17 @@ public class CloudFormationHelper {
                     .withCapabilities(Capability.CAPABILITY_NAMED_IAM);
             cfnClient.createStack(createStackRequest);
 
+            // wait for the stack to reach a terminal status
             Stack stack = this.pollBlueprintStatusStatus(stackName);
             if (stack == null) {
                 throw new RuntimeException("Failed to create blueprint stack " + stackName);
             }
+            if (stack.getStackStatus().equals(StackStatus.CREATE_IN_PROGRESS.toString())) {
+                throw new RuntimeException("Blueprint stack " + stackName + " is still in CREATE_IN_PROGRESS state " +
+                        "and did not complete deployment within test timeout");
+            }
             if (!stack.getStackStatus().equals(StackStatus.CREATE_COMPLETE.toString())) {
-                throw new RuntimeException("Create blueprint stack ended with unsuccessful status: " + stack);
+                throw new RuntimeException("Create blueprint stack ended with unsuccessful status: " + stack.getStackStatus());
             }
             return stack;
         } catch (Exception e) {
