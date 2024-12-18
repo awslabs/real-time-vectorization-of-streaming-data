@@ -12,16 +12,11 @@ import com.amazonaws.services.cloudformation.model.*;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DeleteVpcEndpointsRequest;
-import com.amazonaws.services.ec2.model.DeleteVpcEndpointsResult;
 import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
-import com.amazonaws.services.opensearch.model.DeleteVpcEndpointRequest;
-import com.amazonaws.services.opensearch.model.DeleteVpcEndpointResult;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,7 +78,7 @@ public class CloudFormationHelper {
         try {
             // URL encode the template URL string
             System.out.println("Stack template URL raw: " + templateURL);
-            String encodedTemplateURL = URLEncoder.encode(templateURL, StandardCharsets.UTF_8);;
+            String encodedTemplateURL = templateURL.replace(":", "%3A");
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
             // get parameters and deploy the stack
@@ -251,65 +246,72 @@ public class CloudFormationHelper {
 
             if (outputKey.equals(BEDROCK_VPC_ENDPOINT_OUTPUT_KEY)) {
                 vpceId = getBedrockVpceToDelete(outputValue);
-                AmazonEC2 ec2Client = AmazonEC2ClientBuilder.defaultClient();
-                DeleteVpcEndpointsRequest deleteVpcEndpointsRequest = new DeleteVpcEndpointsRequest().withVpcEndpointIds(vpceId);
-                DeleteVpcEndpointsResult deleteVpcEndpointsResult = ec2Client.deleteVpcEndpoints(deleteVpcEndpointsRequest);
+                if (!vpceId.isEmpty()) {
+                    // delete the Bedrock VPC endpoint
+                    AmazonEC2 ec2Client = AmazonEC2ClientBuilder.defaultClient();
+                    DeleteVpcEndpointsRequest deleteVpcEndpointsRequest = new DeleteVpcEndpointsRequest()
+                            .withVpcEndpointIds(vpceId);
+                    ec2Client.deleteVpcEndpoints(deleteVpcEndpointsRequest);
+                }
             } else if (outputKey.equals(OPENSEARCH_ENDPOINT_OUTPUT_KEY)) {
                 vpceId = getOpenSearchVpceToDelete(outputValue);
-                if (opensearchType.equals(OpenSearchType.PROVISIONED.toString())) {
-                    AmazonOpenSearch opensearchClient = AmazonOpenSearchClientBuilder.defaultClient();
-                    DeleteVpcEndpointRequest deleteVpcEndpointRequest = new DeleteVpcEndpointRequest().withVpcEndpointId(vpceId);
-                    DeleteVpcEndpointResult deleteVpcEndpointResult = opensearchClient.deleteVpcEndpoint(deleteVpcEndpointRequest);
-                } else if (opensearchType.equals(OpenSearchType.SERVERLESS.toString())) {
-                    AWSOpenSearchServerless openSearchClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
-                    com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointRequest deleteVpcEndpointRequest =
-                            new com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointRequest().withId(vpceId);
-                    com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointResult deleteVpcEndpointResult =
-                            openSearchClient.deleteVpcEndpoint(deleteVpcEndpointRequest);
-                } else {
-                    throw new RuntimeException("Unknown OpenSearchType when cleaning up stack: " + opensearchType);
+                if (!vpceId.isEmpty()) {
+                    if (opensearchType.equals(OpenSearchType.PROVISIONED.toString())) {
+                        // delete the OpenSearch Provisioned VPC endpoint
+                        AmazonOpenSearch opensearchClient = AmazonOpenSearchClientBuilder.defaultClient();
+                        com.amazonaws.services.opensearch.model.DeleteVpcEndpointRequest deleteVpcEndpointRequest =
+                                new com.amazonaws.services.opensearch.model.DeleteVpcEndpointRequest().withVpcEndpointId(vpceId);
+                        opensearchClient.deleteVpcEndpoint(deleteVpcEndpointRequest);
+                    } else if (opensearchType.equals(OpenSearchType.SERVERLESS.toString())) {
+                        // delete the OpenSearch Serverless VPC endpoint
+                        AWSOpenSearchServerless openSearchClient = AWSOpenSearchServerlessClientBuilder.defaultClient();
+                        com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointRequest deleteVpcEndpointRequest =
+                                new com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointRequest().withId(vpceId);
+                        com.amazonaws.services.opensearchserverless.model.DeleteVpcEndpointResult deleteVpcEndpointResult =
+                                openSearchClient.deleteVpcEndpoint(deleteVpcEndpointRequest);
+                    } else {
+                        throw new RuntimeException("Unknown OpenSearchType when cleaning up stack: " + opensearchType);
+                    }
                 }
             }
         }
     }
 
     private String getBedrockVpceToDelete(String outputValue) {
-        Pattern pattern = Pattern.compile("Bedrock VPC endpoint ID on stack creation: (?<vpceID>[a-z0-9\\-]+) \\| Was created by this stack: (?<vpceBoolean>(True|False))");
+        Pattern pattern = Pattern.compile("Bedrock VPC endpoint ID on stack creation: " +
+                "(?<vpceID>[a-z0-9\\-]+) \\| Was created by this stack: (?<vpceBoolean>(True|False))");
         Matcher matcher = pattern.matcher(outputValue);
 
         if (matcher.find()) {
             String vpceID = matcher.group("vpceID");
             boolean vpceBoolean = Boolean.getBoolean(matcher.group("vpceBoolean"));
-            // TODO: Remove prints later
-            System.out.println("BEDROCK vpceID: " + vpceID);
-            System.out.println("BEDROCK vpceBoolean: " + vpceBoolean);
             if (vpceBoolean) {
                 return vpceID;
             } else {
                 return "";
             }
         } else {
-            throw new RuntimeException("Unexpected output value structure when parsing stack output for Bedrock VPCEs: " + outputValue);
+            throw new RuntimeException("Unexpected output value structure when parsing stack output for " +
+                    "Bedrock VPCEs: " + outputValue);
         }
     }
 
     private String getOpenSearchVpceToDelete(String outputValue) {
-        Pattern pattern = Pattern.compile("OpenSearch VPC endpoint ID(s) on stack creation: (?<vpceID>[a-z0-9\\-,]+) \\| Was created by this stack: (?<vpceBoolean>(True|False))");
+        Pattern pattern = Pattern.compile("OpenSearch VPC endpoint ID(s) on stack creation: " +
+                "(?<vpceID>[a-z0-9\\-,]+) \\| Was created by this stack: (?<vpceBoolean>(True|False))");
         Matcher matcher = pattern.matcher(outputValue);
 
         if (matcher.find()) {
             String vpceID = matcher.group("vpceID");
             boolean vpceBoolean = Boolean.getBoolean(matcher.group("vpceBoolean"));
-            // TODO: Remove prints later
-            System.out.println("OPENSEARCH vpceID: " + vpceID);
-            System.out.println("OPENSEARCH vpceBoolean: " + vpceBoolean);
             if (vpceBoolean) {
                 return vpceID;
             } else {
                 return "";
             }
         } else {
-            throw new RuntimeException("Unexpected output value structure when parsing stack output for OpenSearch VPCEs: " + outputValue);
+            throw new RuntimeException("Unexpected output value structure when parsing stack output for " +
+                    "OpenSearch VPCEs: " + outputValue);
         }
     }
 
