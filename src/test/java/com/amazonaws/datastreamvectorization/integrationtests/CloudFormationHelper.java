@@ -358,7 +358,8 @@ public class CloudFormationHelper {
      * @return StackRoleName parameter value
      */
     private String buildStackRoleName(String testID) {
-        return "integ-test-app-" + testID + "-role";
+        String testIDHash = String.valueOf(testID.hashCode()); // to reduce role name length
+        return "integ-test-app-" + testIDHash + "-role";
     }
 
     /**
