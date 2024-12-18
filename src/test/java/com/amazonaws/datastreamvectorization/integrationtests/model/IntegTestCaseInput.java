@@ -5,11 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Config for a single integration test case
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ITCaseInput {
+public class IntegTestCaseInput {
     private String TestName;
     private MskClusterConfig MskCluster;
     private OpenSearchClusterConfig OpenSearchCluster;

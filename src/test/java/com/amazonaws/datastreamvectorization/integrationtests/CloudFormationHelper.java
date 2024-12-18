@@ -16,13 +16,12 @@ import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
-import com.amazonaws.services.s3.AmazonS3URI;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BlueprintParameterKeys.*;
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.IntegTestConstants.BlueprintParameterKeys.*;
 
 /**
  * Helper class to interact with Amazon CloudFormation

@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Model containing OpenSearch cluster information needed for an integration test case
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

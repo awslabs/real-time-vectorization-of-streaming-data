@@ -1,6 +1,6 @@
 package com.amazonaws.datastreamvectorization.integrationtests.constants;
 
-public final class ITConstants {
+public final class IntegTestConstants {
     public static final String INTEG_TEST_INPUTS_FILE = "integTestInputsFile";
     public static final String BLUEPRINT_CDK_TEMPLATE_URL = "blueprintCDKTemplateURL";
 

@@ -2,7 +2,7 @@ package com.amazonaws.datastreamvectorization.integrationtests;
 
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
-import com.amazonaws.datastreamvectorization.integrationtests.model.ITCaseInput;
+import com.amazonaws.datastreamvectorization.integrationtests.model.IntegTestCaseInput;
 import com.amazonaws.datastreamvectorization.integrationtests.model.MskClusterConfig;
 import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterConfig;
 import com.amazonaws.services.cloudformation.model.Stack;
@@ -11,24 +11,23 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BLUEPRINT_CDK_TEMPLATE_URL;
-import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BlueprintParameterKeys.PARAM_APP_NAME;
-import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BlueprintParameterKeys.PARAM_ROLE_NAME;
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.IntegTestConstants.BLUEPRINT_CDK_TEMPLATE_URL;
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.IntegTestConstants.BlueprintParameterKeys.PARAM_APP_NAME;
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.IntegTestConstants.BlueprintParameterKeys.PARAM_ROLE_NAME;
 
 /**
  * Integration Test Base class that contains steps for running one integration test case.
  */
 @Slf4j
-public class IntegrationTestBase {
+public class IntegTestBase {
 
     // TODO: test case needs to do certain cleanup even if test fails in the middle
     //  For example, clean up MSK topic and OpenSearch index if stack deployment fails
-    public void runTestCase(ITCaseInput testCaseInput) {
+    public void runTestCase(IntegTestCaseInput testCaseInput) {
         String testID = this.generateTestID(testCaseInput.getTestName());
         MskClusterConfig mskClusterConfig = testCaseInput.getMskCluster();
         OpenSearchClusterConfig osClusterConfig = testCaseInput.getOpenSearchCluster();
@@ -134,6 +133,12 @@ public class IntegrationTestBase {
                 osTestIndexName);
     }
 
+    /**
+     * Generate a test ID string for a single test case run.
+     *
+     * @param testName Name of the integration test case
+     * @return Test ID string
+     */
     private String generateTestID(String testName) {
         String currentTimestamp = Long.toString(System.currentTimeMillis());
         return String.join("-", testName, currentTimestamp);
