@@ -14,6 +14,7 @@ import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionRequest;
 import com.amazonaws.services.opensearchserverless.model.BatchGetCollectionResult;
+import org.testcontainers.shaded.org.bouncycastle.util.Strings;
 
 import java.util.List;
 import java.util.Map;
@@ -141,6 +142,6 @@ public class OpenSearchHelper {
      * @return Index name string
      */
     public String buildTestVectorIndexName(String testId) {
-        return "integ-test-index-" + testId;
+        return Strings.toLowerCase("integ-test-index-" + testId);
     }
 }

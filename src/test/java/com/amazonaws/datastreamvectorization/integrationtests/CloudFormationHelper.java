@@ -195,10 +195,33 @@ public class CloudFormationHelper {
         }
     }
 
-    public void deleteBlueprintStack(String stackName) {
+    /**
+     * Delete the blueprint stack and first cleaning up any created stack-external resources, such as VPC endpoints.
+     * Will wait for a terminal stack status to be reached before returning, such as CREATE_COMPLETE and CREATE_FAILED,
+     * until a max timeout is reached.
+     *
+     * @param stackName The name of the stack to delete
+     * @return Stack that was deleted
+     */
+    public Stack deleteBlueprintStack(String stackName) {
+        // first clean up external stack resources
         this.blueprintStackCleanup(stackName);
+        // delete the stack
         DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackName);
         cfnClient.deleteStack(deleteStackRequest);
+        // wait for the stack to reach a terminal status
+        Stack stack = this.pollBlueprintStatusStatus(stackName);
+        if (stack == null) {
+            throw new RuntimeException("Failed to get the deleting blueprint stack " + stackName);
+        }
+        if (stack.getStackStatus().equals(StackStatus.DELETE_IN_PROGRESS.toString())) {
+            throw new RuntimeException("Blueprint stack " + stackName + " is still in DELETE_IN_PROGRESS state " +
+                    "and did not complete deletion within test timeout");
+        }
+        if (!stack.getStackStatus().equals(StackStatus.DELETE_COMPLETE.toString())) {
+            throw new RuntimeException("Delete blueprint stack ended with unsuccessful status: " + stack.getStackStatus());
+        }
+        return stack;
     }
 
     public void blueprintStackCleanup(String stackName) {
@@ -287,26 +310,62 @@ public class CloudFormationHelper {
         }
     }
 
+    /**
+     * Build the StackName parameter value for a test
+     *
+     * @param testID ID string for the test
+     * @return StackName parameter value
+     */
     private String buildStackName(String testID) {
         return "datastream-vec-integ-test-" + testID;
     }
 
+    /**
+     * Build the StackAppName parameter value for a test
+     *
+     * @param testID ID string for the test
+     * @return StackAppName parameter value
+     */
     private String buildStackAppName(String testID) {
         return "integ-test-app-" + testID;
     }
 
+    /**
+     * Build the StackRoleName parameter value for a test
+     *
+     * @param testID ID string for the test
+     * @return StackRoleName parameter value
+     */
     private String buildStackRoleName(String testID) {
         return "integ-test-app-" + testID + "-role";
     }
 
+    /**
+     * Build the StackLogGroupName parameter value for a test
+     *
+     * @param testID ID string for the test
+     * @return StackLogGroupName parameter value
+     */
     private String buildStackLogGroupName(String testID) {
         return "integ-test-app-" + testID + "-log-group";
     }
 
+    /**
+     * Build the StackLogStreamName parameter value for a test
+     *
+     * @param testID ID string for the test
+     * @return StackLogStreamName parameter value
+     */
     private String buildStackLogStreamName(String testID) {
         return "integ-test-app-" + testID + "-log-stream";
     }
 
+    /**
+     * Build the StackAssetBucketName parameter value for a test
+     *
+     * @param testID ID string for the test
+     * @return StackAssetBucketName parameter value
+     */
     private String buildStackAssetBucketName(String testID) {
         return "integ-test-app-" + testID + "-bucket";
     }
