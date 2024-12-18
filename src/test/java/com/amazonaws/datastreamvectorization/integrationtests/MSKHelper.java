@@ -12,6 +12,9 @@ import com.amazonaws.services.kafka.model.*;
 
 import java.util.List;
 
+/**
+ * Helper class to interact with Amazon MSK
+ */
 public class MSKHelper {
     AWSKafka mskClient;
 
@@ -31,7 +34,13 @@ public class MSKHelper {
         return bookstrapBrokersResult.getBootstrapBrokerStringSaslIam();
     }
 
-    public MSKClusterBlueprintParameters getMSKClusterBlueprintParameters(String mskClusterArn, String testId) {
+    /**
+     * Prepares the MSK cluster data needed to deploy the blueprint CDK stack.
+     * @param mskClusterArn MSK cluster ARN
+     * @param testID ID string for the test
+     * @return MSKClusterBlueprintParameters containing required blueprint MSK parameters
+     */
+    public MSKClusterBlueprintParameters getMSKClusterBlueprintParameters(String mskClusterArn, String testID) {
         DescribeClusterV2Request describeClusterV2Request = new DescribeClusterV2Request().withClusterArn(mskClusterArn);
         DescribeClusterV2Result describeClusterV2Result = this.mskClient.describeClusterV2(describeClusterV2Request);
 
@@ -60,22 +69,34 @@ public class MSKHelper {
         return MSKClusterBlueprintParameters.builder()
                 .MSKClusterArn(mskClusterArn)
                 .MSKClusterName(mskClusterName)
-                .MSKTopics(this.buildTestTopicName(testId))
+                .MSKTopics(this.buildTestTopicName(testID))
                 .MSKVpcId(mskVpcId)
                 .MSKClusterSubnetIds(String.join(",", mskSubnetIDs))
                 .MSKClusterSecurityGroupIds(String.join(",", mskSecurityGroupIDs))
                 .build();
     }
 
-    public String buildTestTopicName(String testId) {
-        return "integ-test-topic-" + testId;
+    /**
+     * Builds the MSK topic name to use for the test.
+     *
+     * @param testID ID string for the test
+     * @return Topic name for the test
+     */
+    public String buildTestTopicName(String testID) {
+        return "integ-test-topic-" + testID;
     }
 
+    /**
+     * Gets the VPC ID from a list of subnets.
+     *
+     * @param subnetIds List of subnet IDs
+     * @return VPC ID
+     */
     private String getVpcIdFromSubnets(List<String> subnetIds) {
         AmazonEC2 ec2Client = AmazonEC2ClientBuilder.defaultClient();
         DescribeSubnetsRequest describeSubnetsRequest = new DescribeSubnetsRequest().withSubnetIds(subnetIds);
         DescribeSubnetsResult describeSubnetsResult = ec2Client.describeSubnets(describeSubnetsRequest);
         List<Subnet> subnets = describeSubnetsResult.getSubnets();
-        return subnets.get(0).getVpcId(); // TODO: error handling if empty / not all subnets have same VPC
+        return subnets.get(0).getVpcId();
     }
 }

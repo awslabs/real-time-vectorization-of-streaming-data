@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 
 import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.INTEG_TEST_INPUTS_FILE;
 
-public class BlueprintIntegrationTests {
+public class BlueprintIT {
     @Test
     void runTests() {
         // TODO: handle test parallelization later
