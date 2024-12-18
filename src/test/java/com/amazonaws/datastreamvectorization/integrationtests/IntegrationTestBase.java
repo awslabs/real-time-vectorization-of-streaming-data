@@ -95,10 +95,7 @@ public class IntegrationTestBase {
                 testID + " integ-test-value-2",
                 testID + " integ-test-value-3"
         );
-        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(
-                testID,
-                new StringSerializer(),
-                new StringSerializer());
+        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaStringProducer(testID);
         List<ProducerRecord<String, String>> mskRecords = testRecords
                 .stream()
                 .map(record -> new ProducerRecord<String, String>(mskTestTopicName, record))

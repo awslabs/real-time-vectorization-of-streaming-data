@@ -79,8 +79,8 @@ public class CloudFormationHelper {
         try {
             // URL encode the template URL string
             System.out.println("Stack template URL raw: " + templateURL);
-            String s3URIPrefix = "s3://";
-            String encodedTemplateURL = s3URIPrefix + templateURL.substring(s3URIPrefix.length())
+            String s3URLPrefix = "https://s3.amazonaws.com/";
+            String encodedTemplateURL = s3URLPrefix + templateURL.substring(s3URLPrefix.length())
                     .replace(":", "%3A");
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
