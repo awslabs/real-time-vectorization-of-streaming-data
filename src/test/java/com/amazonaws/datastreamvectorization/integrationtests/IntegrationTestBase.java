@@ -24,7 +24,7 @@ import static com.amazonaws.datastreamvectorization.integrationtests.constants.I
  * Integration Test Base class that contains steps for running one integration test case.
  */
 @Slf4j
-public class ITBase {
+public class IntegrationTestBase {
 
     // TODO: test case needs to do certain cleanup even if test fails in the middle
     //  For example, clean up MSK topic and OpenSearch index if stack deployment fails

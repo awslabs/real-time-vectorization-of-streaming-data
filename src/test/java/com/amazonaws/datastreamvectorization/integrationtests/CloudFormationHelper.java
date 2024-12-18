@@ -16,6 +16,7 @@ import com.amazonaws.services.opensearch.AmazonOpenSearch;
 import com.amazonaws.services.opensearch.AmazonOpenSearchClientBuilder;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
+import com.amazonaws.services.s3.AmazonS3URI;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -78,7 +79,9 @@ public class CloudFormationHelper {
         try {
             // URL encode the template URL string
             System.out.println("Stack template URL raw: " + templateURL);
-            String encodedTemplateURL = templateURL.replace(":", "%3A");
+            String s3URIPrefix = "s3://";
+            String encodedTemplateURL = s3URIPrefix + templateURL.substring(s3URIPrefix.length())
+                    .replace(":", "%3A");
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
             // get parameters and deploy the stack
@@ -277,6 +280,12 @@ public class CloudFormationHelper {
         }
     }
 
+    /**
+     * Get the VPC endpoint ID of the Bedrock VPC endpoint if it was created by the stack
+     *
+     * @param outputValue Bedrock output value string from stack output
+     * @return Bedrock VPC endpoint ID
+     */
     private String getBedrockVpceToDelete(String outputValue) {
         Pattern pattern = Pattern.compile("Bedrock VPC endpoint ID on stack creation: " +
                 "(?<vpceID>[a-z0-9\\-]+) \\| Was created by this stack: (?<vpceBoolean>(True|False))");
@@ -296,6 +305,12 @@ public class CloudFormationHelper {
         }
     }
 
+    /**
+     * Get the VPC endpoint ID of the OpenSearch VPC endpoint if it was created by the stack
+     *
+     * @param outputValue OpenSearch output value string from stack output
+     * @return OpenSearch VPC endpoint ID
+     */
     private String getOpenSearchVpceToDelete(String outputValue) {
         Pattern pattern = Pattern.compile("OpenSearch VPC endpoint ID(s) on stack creation: " +
                 "(?<vpceID>[a-z0-9\\-,]+) \\| Was created by this stack: (?<vpceBoolean>(True|False))");

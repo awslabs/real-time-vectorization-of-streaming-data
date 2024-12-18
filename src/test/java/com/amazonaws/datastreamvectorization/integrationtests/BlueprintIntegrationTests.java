@@ -15,13 +15,13 @@ import java.nio.charset.StandardCharsets;
 
 import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.INTEG_TEST_INPUTS_FILE;
 
-public class BlueprintIT {
+public class BlueprintIntegrationTests {
     @Test
     void runTests() {
         // TODO: handle test parallelization later
         ITCaseInput[] testInputs = this.readTestConfigFile().getTestCases();
         for (ITCaseInput testCase : testInputs) {
-            ITBase integrationTest = new ITBase();
+            IntegrationTestBase integrationTest = new IntegrationTestBase();
             integrationTest.runTestCase(testCase);
         }
     }
