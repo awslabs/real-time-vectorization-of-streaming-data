@@ -19,8 +19,9 @@ import com.amazonaws.services.opensearch.model.DeleteVpcEndpointRequest;
 import com.amazonaws.services.opensearch.model.DeleteVpcEndpointResult;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
-import com.amazonaws.services.s3.AmazonS3URI;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -82,8 +83,7 @@ public class CloudFormationHelper {
         try {
             // URL encode the template URL string
             System.out.println("Stack template URL raw: " + templateURL);
-            AmazonS3URI templateS3URI = new AmazonS3URI(templateURL, true);
-            String encodedTemplateURL = templateS3URI.toString();
+            String encodedTemplateURL = URLEncoder.encode(templateURL, StandardCharsets.UTF_8);;
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
             // get parameters and deploy the stack
@@ -240,13 +240,14 @@ public class CloudFormationHelper {
         }
         Stack stackToCleanup = stacks.get(0);
 
+        // get the OpenSearch cluster type
         String opensearchType = getParameterValue(stackToCleanup, PARAM_OPEN_SEARCH_TYPE);
 
         List<Output> outputs = stackToCleanup.getOutputs();
         for (Output output : outputs) {
             String outputKey = output.getOutputKey();
             String outputValue = output.getOutputValue();
-            String vpceId = "";
+            String vpceId;
 
             if (outputKey.equals(BEDROCK_VPC_ENDPOINT_OUTPUT_KEY)) {
                 vpceId = getBedrockVpceToDelete(outputValue);
@@ -255,7 +256,6 @@ public class CloudFormationHelper {
                 DeleteVpcEndpointsResult deleteVpcEndpointsResult = ec2Client.deleteVpcEndpoints(deleteVpcEndpointsRequest);
             } else if (outputKey.equals(OPENSEARCH_ENDPOINT_OUTPUT_KEY)) {
                 vpceId = getOpenSearchVpceToDelete(outputValue);
-
                 if (opensearchType.equals(OpenSearchType.PROVISIONED.toString())) {
                     AmazonOpenSearch opensearchClient = AmazonOpenSearchClientBuilder.defaultClient();
                     DeleteVpcEndpointRequest deleteVpcEndpointRequest = new DeleteVpcEndpointRequest().withVpcEndpointId(vpceId);
