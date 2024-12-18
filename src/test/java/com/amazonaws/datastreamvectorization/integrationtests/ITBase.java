@@ -1,11 +1,24 @@
 package com.amazonaws.datastreamvectorization.integrationtests;
 
+import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
+import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
+import com.amazonaws.datastreamvectorization.integrationtests.model.ITCaseInput;
+import com.amazonaws.datastreamvectorization.integrationtests.model.MskClusterConfig;
+import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterConfig;
+import com.amazonaws.services.cloudformation.model.Stack;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Assertions;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BLUEPRINT_CDK_TEMPLATE_URL;
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BlueprintParameterKeys.PARAM_APP_NAME;
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BlueprintParameterKeys.PARAM_ROLE_NAME;
 
 /**
  * Integration Test Base class that contains steps for running one integration test case.
@@ -13,39 +26,117 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ITBase {
 
-    public void runTest(List<String> recordsToProduce) {
-        readTestConfigFile();
-    }
+    public void runTestCase(ITCaseInput testCaseInput) {
+        String testID = this.generateTestID(testCaseInput.getTestName());
+        MskClusterConfig mskClusterConfig = testCaseInput.getMskCluster();
+        OpenSearchClusterConfig osClusterConfig = testCaseInput.getOpenSearchCluster();
 
-    // TODO: return new "TestInputs" class object
-    private void readTestConfigFile() {
+        // create MSK clients
+        MSKHelper mskHelper = new MSKHelper();
+        String mskClusterBootstrapBrokerString = mskHelper.getBootstrapBrokers(mskClusterConfig.getARN());
+        KafkaClients kafkaClients = new KafkaClients(mskClusterBootstrapBrokerString);
+        AdminClient adminClient = kafkaClients.createKafkaAdminClient(testID);
 
+        // create OpenSearch clients
+        OpenSearchHelper osHelper = new OpenSearchHelper();
+        OpenSearchRestClient osRestClient = new OpenSearchRestClient();
+
+        // create other service clients
+        CloudFormationHelper cfnHelper = new CloudFormationHelper();
+        MSFHelper msfHelper = new MSFHelper();
+        BedrockHelper bedrockHelper = new BedrockHelper();
+
+        // create new MSK topic for test
+        String mskTestTopicName = mskHelper.buildTestTopicName(testID);
+        adminClient.createTopics(List.of(new NewTopic(mskTestTopicName, 3, (short) 3)));
+
+        // create new OpenSearch index for test
+        EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
+        String osTestIndexName = osHelper.buildTestVectorIndexName(testID);
+        osRestClient.createVectorIndex(
+                osClusterConfig.getEndpointUrl(),
+                osClusterConfig.getOpenSearchClusterType(),
+                osTestIndexName,
+                embeddingModel);
+
+        // deploy the blueprint stack
+        String blueprintCDKTemplateURL = System.getProperty(BLUEPRINT_CDK_TEMPLATE_URL);
+        Stack blueprintStack = cfnHelper.createBlueprintStack(
+                blueprintCDKTemplateURL,
+                testCaseInput.getMskCluster(),
+                testCaseInput.getOpenSearchCluster(),
+                testID);
+
+        // add blueprint stack IAM role as master user to the OpenSearch cluster
+        if (osClusterConfig.getOpenSearchClusterType().equals(OpenSearchType.PROVISIONED)) {
+            String iamRoleName = cfnHelper.getParameterValue(blueprintStack, PARAM_ROLE_NAME);
+            osHelper.addMasterUserIAMRole(osClusterConfig.getName(), iamRoleName);
+        }
+
+        // update MSF app config
+        String msfAppName = cfnHelper.getParameterValue(blueprintStack, PARAM_APP_NAME);
+        msfHelper.updateMSFAppDefault(msfAppName);
+
+        // start the MSF app
+        msfHelper.startMSFApp(msfAppName);
+        // TODO: wait and validate that MSF app is running
+        //  for now, just sleeping
+        try {
+            Thread.sleep(300000L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // produce to the MSK cluster
+        List<String> testRecords = List.of(
+                testID + " integ-test-value-1",
+                testID + " integ-test-value-2",
+                testID + " integ-test-value-3"
+        );
+        KafkaProducer<String, String> kafkaProducer = kafkaClients.createKafkaProducer(
+                testID,
+                new StringSerializer(),
+                new StringSerializer());
+        List<ProducerRecord<String, String>> mskRecords = testRecords
+                .stream()
+                .map(record -> new ProducerRecord<String, String>(mskTestTopicName, record))
+                .collect(Collectors.toList());
+        for (ProducerRecord<String, String> record : mskRecords) {
+            kafkaProducer.send(record);
+        }
+
+        // query for OpenSearch records
+        // TODO: wait and validate in a loop that OpenSearch records exist
+        //  for now, just sleeping
+        try {
+            Thread.sleep(120000L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        osRestClient.queryIndexRecords(
+                osClusterConfig.getEndpointUrl(),
+                osClusterConfig.getOpenSearchClusterType(),
+                osTestIndexName);
+
+        // stop MSF app
+        msfHelper.stopMSFApp(msfAppName, true);
+
+        // at step deleting stack (and deleting VPC endpoints)
+        cfnHelper.deleteBlueprintStack(blueprintStack.getStackName());
+
+        // delete the MSK test topic
+        adminClient.deleteTopics(List.of(mskTestTopicName));
+        adminClient.close();
+
+        // delete the OpenSearch test index
+        osRestClient.deleteIndex(
+                osClusterConfig.getEndpointUrl(),
+                osClusterConfig.getOpenSearchClusterType(),
+                osTestIndexName);
     }
 
     private String generateTestID(String testName) {
         String currentTimestamp = Long.toString(System.currentTimeMillis());
         return String.join("-", testName, currentTimestamp);
-    }
-
-
-    /**
-     * Validates that the original data fields from OpenSearch records queried match the expected
-     * original data that was produced to the MSK cluster.
-     * @param expectedOriginalDataList
-     * @param searchResult
-     */
-    private void validateOpenSearchRecords(List<String> expectedOriginalDataList, List<OpenSearchIndexDocument> searchResult) {
-        if (searchResult.size() != expectedOriginalDataList.size()) {
-            log.info("Did not find expected number of records in OpenSearch search result. " +
-                    "Expected {} records but got {}", expectedOriginalDataList.size(), searchResult.size());
-        }
-        List<String> resultOriginalDataList = searchResult
-                .stream()
-                .map(OpenSearchIndexDocument::getOriginal_data)
-                .sorted().
-                collect(Collectors.toList());
-
-        Collections.sort(expectedOriginalDataList);
-        Assertions.assertEquals(expectedOriginalDataList, resultOriginalDataList);
     }
 }

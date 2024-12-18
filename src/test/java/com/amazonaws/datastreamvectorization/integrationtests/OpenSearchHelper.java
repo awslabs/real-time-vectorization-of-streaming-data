@@ -28,9 +28,9 @@ public class OpenSearchHelper {
      * @param osClusterName Name of the OpenSearch cluster
      * @param osClusterType Type of the OpenSearch cluster (PROVISIONED vs. SERVERLESS)
      * @param testId ID string for the test
-     * @return OpenSearchClusterBlueprintData containing required blueprint OpenSearch parameters
+     * @return OpenSearchClusterBlueprintParameters containing required blueprint OpenSearch parameters
      */
-    public OpenSearchClusterBlueprintData getOpenSearchClusterBlueprintData(String osClusterName, OpenSearchType osClusterType, String testId) {
+    public OpenSearchClusterBlueprintParameters getOpenSearchClusterBlueprintParameters(String osClusterName, OpenSearchType osClusterType, String testId) {
         String openSearchEndpointURL;
         // gets the OpenSearchEndpointURL parameter for blueprint deployment
         if (osClusterType == OpenSearchType.PROVISIONED) {
@@ -59,8 +59,8 @@ public class OpenSearchHelper {
             throw new RuntimeException("Got unrecognized OpenSearch cluster type: " + osClusterType);
         }
 
-        // build and return OpenSearchClusterBlueprintData
-        return OpenSearchClusterBlueprintData.builder()
+        // build and return OpenSearchClusterBlueprintParameters
+        return OpenSearchClusterBlueprintParameters.builder()
                 .OpenSearchCollectionName(osClusterName)
                 .OpenSearchType(osClusterType.toString())
                 .OpenSearchEndpointURL(openSearchEndpointURL)
@@ -69,10 +69,10 @@ public class OpenSearchHelper {
     }
 
     /**
-     * Finds the VPC endpoint belonging to the given OpenSearch domain that connects to the
-     * given VPC ID. Purpose of this method is to find VPC endpoints for a VPC that is different
-     * from the VPC the OpenSearch domain is in.
-     * Only intended for provisioned OpenSearch domain. Will fail for serverless OpenSearch collections.
+     * Finds the VPC endpoint belonging to the given OpenSearch domain that connects to the given VPC ID.
+     * Purpose of this method is to find VPC endpoints for the MSK/MSF VPC when it is different from the VPC
+     * the OpenSearch domain is in.
+     * Only intended for provisioned OpenSearch domain, will fail for serverless OpenSearch collections.
      *
      * @param osClusterName Name of the OpenSearch domain that the VPC endpoint belongs to.
      * @param crossVpcId VPC ID of the VPC that the VPC endpoint should connect to.
@@ -136,7 +136,7 @@ public class OpenSearchHelper {
      * @param testId ID string for the test
      * @return Index name string
      */
-    private String buildTestVectorIndexName(String testId) {
+    public String buildTestVectorIndexName(String testId) {
         return "integ-test-index-" + testId;
     }
 }

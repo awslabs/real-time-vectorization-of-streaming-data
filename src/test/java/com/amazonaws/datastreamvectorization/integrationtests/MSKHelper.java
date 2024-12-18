@@ -13,23 +13,24 @@ import java.util.List;
 
 public class MSKHelper {
     AWSKafka mskClient;
-    String testId;
 
-    public MSKHelper(String testId) {
+    public MSKHelper() {
         this.mskClient = AWSKafkaClientBuilder.defaultClient();
-        this.testId = testId;
     }
 
+    /**
+     * Get bootstrap brokers for the provided MSK cluster
+     *
+     * @param mskClusterArn ARN of the MSK cluster
+     * @return Bootstrap brokers string for connecting to the cluster
+     */
     public String getBootstrapBrokers(String mskClusterArn) {
         GetBootstrapBrokersRequest bookstrapBrokersRequest = new GetBootstrapBrokersRequest();
         GetBootstrapBrokersResult bookstrapBrokersResult = this.mskClient.getBootstrapBrokers(bookstrapBrokersRequest.withClusterArn(mskClusterArn));
-        System.out.println("MSK cluster bootstrap server result: " + bookstrapBrokersResult);
-        String mskClusterBootstrapBrokerString = bookstrapBrokersResult.getBootstrapBrokerStringSaslIam();
-        System.out.println("MSK cluster bootstrap server string: " + mskClusterBootstrapBrokerString);
-        return mskClusterBootstrapBrokerString;
+        return bookstrapBrokersResult.getBootstrapBrokerStringSaslIam();
     }
 
-    public MSKClusterData getMSKClusterData(String mskClusterArn) {
+    public MSKClusterBlueprintParameters getMSKClusterBlueprintParameters(String mskClusterArn, String testId) {
         DescribeClusterV2Request describeClusterV2Request = new DescribeClusterV2Request().withClusterArn(mskClusterArn);
         DescribeClusterV2Result describeClusterV2Result = this.mskClient.describeClusterV2(describeClusterV2Request);
 
@@ -55,17 +56,17 @@ public class MSKHelper {
                     "DescribeClusterV2Result for cluster " + mskClusterArn + "was: " + describeClusterV2Result);
         }
 
-        return MSKClusterData.builder()
+        return MSKClusterBlueprintParameters.builder()
                 .MSKClusterArn(mskClusterArn)
                 .MSKClusterName(mskClusterName)
-                .MSKTopics(this.buildTestTopicName())
+                .MSKTopics(this.buildTestTopicName(testId))
                 .MSKVpcId(mskVpcId)
                 .MSKClusterSubnetIds(String.join(",", mskSubnetIDs))
                 .MSKClusterSecurityGroupIds(String.join(",", mskSecurityGroupIDs))
                 .build();
     }
 
-    public String buildTestTopicName() {
+    public String buildTestTopicName(String testId) {
         return "integ-test-topic-" + testId;
     }
 

@@ -2,6 +2,8 @@ package com.amazonaws.datastreamvectorization.integrationtests;
 
 import com.amazonaws.datastreamvectorization.datasink.model.OpenSearchType;
 import com.amazonaws.datastreamvectorization.embedding.model.EmbeddingModel;
+import com.amazonaws.datastreamvectorization.integrationtests.model.MskClusterConfig;
+import com.amazonaws.datastreamvectorization.integrationtests.model.OpenSearchClusterConfig;
 import com.amazonaws.services.cloudformation.AmazonCloudFormation;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
 import com.amazonaws.services.cloudformation.model.*;
@@ -15,10 +17,14 @@ import com.amazonaws.services.opensearch.model.DeleteVpcEndpointRequest;
 import com.amazonaws.services.opensearch.model.DeleteVpcEndpointResult;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerless;
 import com.amazonaws.services.opensearchserverless.AWSOpenSearchServerlessClientBuilder;
+import com.amazonaws.services.s3.AmazonS3URI;
+
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.amazonaws.datastreamvectorization.integrationtests.constants.ITConstants.BlueprintParameterKeys.*;
 
 public class CloudFormationHelper {
     AmazonCloudFormation cfnClient;
@@ -36,71 +42,91 @@ public class CloudFormationHelper {
             StackStatus.ROLLBACK_FAILED
     );
 
-    public CloudFormationHelper(String testId) {
+    public CloudFormationHelper() {
         cfnClient = AmazonCloudFormationClientBuilder.defaultClient();
-        this.testId = testId;
     }
 
-    public String buildStackAppName() {
-        return "integ-test-app-" + testId;
+    public String getParameterValue(Stack stack, String parameterKey) {
+        int parameterIndex = stack.getParameters().indexOf(new Parameter().withParameterKey(parameterKey));
+        if (parameterIndex < 0) {
+            throw new RuntimeException("Did not find parameter " + parameterKey + "in stack " + stack.getStackName());
+        }
+        return stack.getParameters().get(parameterIndex).getParameterValue();
     }
 
-    public String buildStackRoleName() {
-        return "integ-test-app-" + testId + "-role";
+    public Stack createBlueprintStack(String templateURL, MskClusterConfig mskCluster, OpenSearchClusterConfig osCluster, String testID) {
+        String stackName = buildStackName(testID);
+
+        try {
+            System.out.println("Stack template URL raw: " + templateURL);
+            AmazonS3URI templateS3URI = new AmazonS3URI(templateURL);
+            String encodedTemplateURL = templateS3URI.toString();
+            System.out.println("Stack template URL: " + encodedTemplateURL);
+
+            List<Parameter> stackParameters = getBlueprintParameters(mskCluster, osCluster, testId);
+
+            CreateStackRequest createStackRequest = new CreateStackRequest()
+                    .withTemplateURL(encodedTemplateURL)
+                    .withStackName(stackName)
+                    .withParameters(stackParameters)
+                    .withCapabilities(Capability.CAPABILITY_NAMED_IAM);
+            cfnClient.createStack(createStackRequest);
+
+            Stack stack = this.pollBlueprintStatusStatus(stackName);
+            if (stack == null) {
+                throw new RuntimeException("Failed to create blueprint stack " + stackName);
+            }
+            if (!stack.getStackStatus().equals(StackStatus.CREATE_COMPLETE.toString())) {
+                throw new RuntimeException("Create blueprint stack ended with unsuccessful status: " + stack);
+            }
+            return stack;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create blueprint stack " + stackName, e);
+        }
     }
 
-    private String buildStackLogGroupName() {
-        return "integ-test-app-" + testId + "-log-group";
-    }
+    private List<Parameter> getBlueprintParameters(MskClusterConfig mskClusterConfig,
+                                                   OpenSearchClusterConfig osClusterConfig,
+                                                   String testID) {
 
-    private String buildStackLogStreamName() {
-        return "integ-test-app-" + testId + "-log-stream";
-    }
-
-    private String buildStackAssetBucketName() {
-        return "integ-test-app-" + testId + "-bucket";
-    }
-
-    private List<Parameter> getBlueprintParameters(String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
-        MSKHelper mskHelper = new MSKHelper(testId);
-        MSKClusterData mskClusterData = mskHelper.getMSKClusterData(mskClusterArn);
-        System.out.println("mskClusterData:");
-        System.out.println(mskClusterData);
+        MSKHelper mskHelper = new MSKHelper();
+        MSKClusterBlueprintParameters mskClusterParams = mskHelper.getMSKClusterBlueprintParameters(
+                mskClusterConfig.getARN(),
+                testID);
 
         OpenSearchHelper osHelper = new OpenSearchHelper();
-        OpenSearchClusterBlueprintData osClusterData = osHelper.getOpenSearchClusterBlueprintData(osClusterName, osClusterType, testId);
-        System.out.println("osClusterData:");
-        System.out.println(osClusterData);
+        OpenSearchClusterBlueprintParameters osClusterParams = osHelper.getOpenSearchClusterBlueprintParameters(
+                osClusterConfig.getName(),
+                osClusterConfig.getOpenSearchClusterType(),
+                testID);
 
         BedrockHelper bedrockHelper = new BedrockHelper();
         EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
-        System.out.println("embeddingModel:");
-        System.out.println(embeddingModel.getModelId());
 
         return List.of(
-            new Parameter().withParameterKey("SourceType").withParameterValue("MSK"),
-            new Parameter().withParameterKey("SourceDataType").withParameterValue("STRING"),
-            new Parameter().withParameterKey("SinkType").withParameterValue("OPENSEARCH"),
-            new Parameter().withParameterKey("MSKClusterName").withParameterValue(mskClusterData.MSKClusterName),
-            new Parameter().withParameterKey("MSKClusterArn").withParameterValue(mskClusterData.MSKClusterArn),
-            new Parameter().withParameterKey("MSKClusterSubnetIds").withParameterValue(mskClusterData.MSKClusterSubnetIds),
-            new Parameter().withParameterKey("MSKClusterSecurityGroupIds").withParameterValue(mskClusterData.MSKClusterSecurityGroupIds),
-            new Parameter().withParameterKey("MSKTopics").withParameterValue(mskClusterData.MSKTopics),
-            new Parameter().withParameterKey("MSKVpcId").withParameterValue(mskClusterData.MSKVpcId),
-            new Parameter().withParameterKey("OpenSearchCollectionName").withParameterValue(osClusterData.OpenSearchCollectionName),
-            new Parameter().withParameterKey("OpenSearchEndpointURL").withParameterValue(osClusterData.OpenSearchEndpointURL),
-            new Parameter().withParameterKey("OpenSearchType").withParameterValue(osClusterData.OpenSearchType),
-            new Parameter().withParameterKey("OpenSearchVectorIndexName").withParameterValue(osClusterData.OpenSearchVectorIndexName),
-            new Parameter().withParameterKey("EmbeddingModelName").withParameterValue(embeddingModel.getModelId()),
-            new Parameter().withParameterKey("JsonKeysToEmbed").withParameterValue(".*"),
-            new Parameter().withParameterKey("AppName").withParameterValue(this.buildStackAppName()),
-            new Parameter().withParameterKey("RuntimeEnvironment").withParameterValue("FLINK-1_19"),
-            new Parameter().withParameterKey("RoleName").withParameterValue(this.buildStackRoleName()),
-            new Parameter().withParameterKey("CloudWatchLogGroupName").withParameterValue(this.buildStackLogGroupName()),
-            new Parameter().withParameterKey("CloudWatchLogStreamName").withParameterValue(this.buildStackLogStreamName()),
-            new Parameter().withParameterKey("AssetBucket").withParameterValue(this.buildStackAssetBucketName()),
-            new Parameter().withParameterKey("JarFile").withParameterValue("data-stream-vectorization-1.0-SNAPSHOT.jar"),
-            new Parameter().withParameterKey("AssetList").withParameterValue("https://github.com/awslabs/real-time-vectorization-of-streaming-data/releases/download/0.1-SNAPSHOT/data-stream-vectorization-1.0-SNAPSHOT.jar")
+            new Parameter().withParameterKey(PARAM_SOURCE_TYPE).withParameterValue("MSK"),
+            new Parameter().withParameterKey(PARAM_SOURCE_DATA_TYPE).withParameterValue("STRING"),
+            new Parameter().withParameterKey(PARAM_SINK_TYPE).withParameterValue("OPENSEARCH"),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_NAME).withParameterValue(mskClusterParams.MSKClusterName),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_ARN).withParameterValue(mskClusterParams.MSKClusterArn),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_SUBNET_IDS).withParameterValue(mskClusterParams.MSKClusterSubnetIds),
+            new Parameter().withParameterKey(PARAM_MSK_CLUSTER_SECURITY_GROUP_IDS).withParameterValue(mskClusterParams.MSKClusterSecurityGroupIds),
+            new Parameter().withParameterKey(PARAM_MSK_TOPICS).withParameterValue(mskClusterParams.MSKTopics),
+            new Parameter().withParameterKey(PARAM_MSK_VPC_ID).withParameterValue(mskClusterParams.MSKVpcId),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_COLLECTION_NAME).withParameterValue(osClusterParams.OpenSearchCollectionName),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_ENDPOINT_URL).withParameterValue(osClusterParams.OpenSearchEndpointURL),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_TYPE).withParameterValue(osClusterParams.OpenSearchType),
+            new Parameter().withParameterKey(PARAM_OPEN_SEARCH_INDEX_NAME).withParameterValue(osClusterParams.OpenSearchVectorIndexName),
+            new Parameter().withParameterKey(PARAM_EMBEDDING_MODEL_NAME).withParameterValue(embeddingModel.getModelId()),
+            new Parameter().withParameterKey(PARAM_JSON_KEYS_TO_EMBED).withParameterValue(".*"),
+            new Parameter().withParameterKey(PARAM_APP_NAME).withParameterValue(this.buildStackAppName(testID)),
+            new Parameter().withParameterKey(PARAM_RUNTIME_ENVIRONMENT).withParameterValue("FLINK-1_19"),
+            new Parameter().withParameterKey(PARAM_ROLE_NAME).withParameterValue(this.buildStackRoleName(testID)),
+            new Parameter().withParameterKey(PARAM_CLOUD_WATCH_LOG_GROUP_NAME).withParameterValue(this.buildStackLogGroupName(testID)),
+            new Parameter().withParameterKey(PARAM_CLOUDWATCH_LOG_STREAM_NAME).withParameterValue(this.buildStackLogStreamName(testID)),
+            new Parameter().withParameterKey(PARAM_ASSET_BUCKET).withParameterValue(this.buildStackAssetBucketName(testID)),
+            new Parameter().withParameterKey(PARAM_JAR_FILE).withParameterValue("data-stream-vectorization-1.0-SNAPSHOT.jar"),
+            new Parameter().withParameterKey(PARAM_ASSET_LIST).withParameterValue("https://github.com/awslabs/real-time-vectorization-of-streaming-data/releases/download/0.1-SNAPSHOT/data-stream-vectorization-1.0-SNAPSHOT.jar")
         );
     }
 
@@ -119,33 +145,6 @@ public class CloudFormationHelper {
             Thread.sleep(POLL_STACK_STATUS_DELAY);
         }
         return stack;
-    }
-
-    public Stack createBlueprintStack(String templateURL, String mskClusterArn, String osClusterName, OpenSearchType osClusterType) {
-        String stackName = "datastream-vec-integ-test-" + testId;
-
-        try {
-            System.out.println("Stack template URL: " + templateURL);
-            List<Parameter> stackParameters = getBlueprintParameters(mskClusterArn, osClusterName, osClusterType);
-
-            CreateStackRequest createStackRequest = new CreateStackRequest()
-                    .withTemplateURL(templateURL)
-                    .withStackName(stackName)
-                    .withParameters(stackParameters)
-                    .withCapabilities(Capability.CAPABILITY_NAMED_IAM);
-            cfnClient.createStack(createStackRequest);
-
-            Stack stack = this.pollBlueprintStatusStatus(stackName);
-            if (stack == null) {
-                throw new RuntimeException("Failed to create blueprint stack " + stackName);
-            }
-            if (!stack.getStackStatus().equals(StackStatus.CREATE_COMPLETE.toString())) {
-                throw new RuntimeException("Create blueprint stack ended with unsuccessful status: " + stack);
-            }
-            return stack;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create blueprint stack " + stackName, e);
-        }
     }
 
     public void deleteBlueprintStack(String stackName) {
@@ -238,6 +237,30 @@ public class CloudFormationHelper {
         } else {
             throw new RuntimeException("Unexpected output value structure when parsing stack output for OpenSearch VPCEs: " + outputValue);
         }
+    }
+
+    private String buildStackName(String testID) {
+        return "datastream-vec-integ-test-" + testID;
+    }
+
+    private String buildStackAppName(String testID) {
+        return "integ-test-app-" + testID;
+    }
+
+    private String buildStackRoleName(String testID) {
+        return "integ-test-app-" + testID + "-role";
+    }
+
+    private String buildStackLogGroupName(String testID) {
+        return "integ-test-app-" + testID + "-log-group";
+    }
+
+    private String buildStackLogStreamName(String testID) {
+        return "integ-test-app-" + testID + "-log-stream";
+    }
+
+    private String buildStackAssetBucketName(String testID) {
+        return "integ-test-app-" + testID + "-bucket";
     }
 
 }

@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class MSKClusterData {
+public class MSKClusterBlueprintParameters {
     String MSKClusterName;
     String MSKClusterArn;
     String MSKClusterSubnetIds;

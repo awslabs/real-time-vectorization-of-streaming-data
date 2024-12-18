@@ -1,4 +1,4 @@
-package com.amazonaws.datastreamvectorization.integrationtests;
+package com.amazonaws.datastreamvectorization.integrationtests.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
