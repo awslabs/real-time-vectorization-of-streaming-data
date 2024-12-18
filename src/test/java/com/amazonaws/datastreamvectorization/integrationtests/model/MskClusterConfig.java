@@ -10,5 +10,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MskClusterConfig {
-    private String ARN;
+    private String Arn;
 }

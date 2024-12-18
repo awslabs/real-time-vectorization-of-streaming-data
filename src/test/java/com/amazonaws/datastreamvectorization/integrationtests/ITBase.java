@@ -35,7 +35,7 @@ public class ITBase {
 
         // create MSK clients
         MSKHelper mskHelper = new MSKHelper();
-        String mskClusterBootstrapBrokerString = mskHelper.getBootstrapBrokers(mskClusterConfig.getARN());
+        String mskClusterBootstrapBrokerString = mskHelper.getBootstrapBrokers(mskClusterConfig.getArn());
         KafkaClients kafkaClients = new KafkaClients(mskClusterBootstrapBrokerString);
         AdminClient adminClient = kafkaClients.createKafkaAdminClient(testID);
 

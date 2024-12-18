@@ -69,14 +69,14 @@ public class CloudFormationHelper {
      * such as CREATE_COMPLETE and CREATE_FAILED, until a max timeout is reached.
      *
      * @param templateURL The S3 template URL of the blueprint CDK template to deploy
-     * @param mskCluster MskClusterConfig MSK cluster information
-     * @param osCluster OpenSearchClusterConfig OpenSearch cluster information
+     * @param mskClusterConfig MskClusterConfig MSK cluster information
+     * @param osClusterConfig OpenSearchClusterConfig OpenSearch cluster information
      * @param testID ID string for the test
      * @return Stack that was deployed
      */
     public Stack createBlueprintStack(String templateURL,
-                                      MskClusterConfig mskCluster,
-                                      OpenSearchClusterConfig osCluster,
+                                      MskClusterConfig mskClusterConfig,
+                                      OpenSearchClusterConfig osClusterConfig,
                                       String testID) {
         String stackName = buildStackName(testID);
         try {
@@ -87,7 +87,7 @@ public class CloudFormationHelper {
             System.out.println("Stack template URL: " + encodedTemplateURL);
 
             // get parameters and deploy the stack
-            List<Parameter> stackParameters = getBlueprintParameters(mskCluster, osCluster, testID);
+            List<Parameter> stackParameters = getBlueprintParameters(mskClusterConfig, osClusterConfig, testID);
             CreateStackRequest createStackRequest = new CreateStackRequest()
                     .withTemplateURL(encodedTemplateURL)
                     .withStackName(stackName)
@@ -113,21 +113,31 @@ public class CloudFormationHelper {
         }
     }
 
+    /**
+     * Get the parameters to deploy the blueprint stack
+     *
+     * @param mskClusterConfig MskClusterConfig MSK cluster information
+     * @param osClusterConfig OpenSearchClusterConfig OpenSearch cluster information
+     * @param testID ID string for the test
+     * @return List of Parameters to provide to the create stack request
+     */
     private List<Parameter> getBlueprintParameters(MskClusterConfig mskClusterConfig,
                                                    OpenSearchClusterConfig osClusterConfig,
                                                    String testID) {
-
+        // get MSK parameters
         MSKHelper mskHelper = new MSKHelper();
         MSKClusterBlueprintParameters mskClusterParams = mskHelper.getMSKClusterBlueprintParameters(
-                mskClusterConfig.getARN(),
+                mskClusterConfig.getArn(),
                 testID);
 
+        // get OpenSearch parameters
         OpenSearchHelper osHelper = new OpenSearchHelper();
         OpenSearchClusterBlueprintParameters osClusterParams = osHelper.getOpenSearchClusterBlueprintParameters(
                 osClusterConfig.getName(),
                 osClusterConfig.getOpenSearchClusterType(),
                 testID);
 
+        // get embedding model
         BedrockHelper bedrockHelper = new BedrockHelper();
         EmbeddingModel embeddingModel = bedrockHelper.getSupportedEmbeddingModel();
 
@@ -158,21 +168,31 @@ public class CloudFormationHelper {
         );
     }
 
-    public Stack pollBlueprintStatusStatus(String stackName) throws InterruptedException {
+    /**
+     * Poll the stack deployment status by periodically checking on the stack status.
+     *
+     * @param stackName The name of the stack to check
+     * @return The deployed stack
+     */
+    public Stack pollBlueprintStatusStatus(String stackName) {
         int retryCount = 0;
         String stackStatus;
         Stack stack = null;
-        while (retryCount++ <= MAX_POLL_STACK_STATUS_RETRIES) {
-            DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackName);
-            DescribeStacksResult describeStacksResult = cfnClient.describeStacks(describeStacksRequest);
-            stack = describeStacksResult.getStacks().get(0);
-            stackStatus = stack.getStackStatus();
-            if (TERMINAL_STACK_STATUSES.contains(StackStatus.fromValue(stackStatus))) {
-                return stack;
+        try {
+            while (retryCount++ <= MAX_POLL_STACK_STATUS_RETRIES) {
+                DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackName);
+                DescribeStacksResult describeStacksResult = cfnClient.describeStacks(describeStacksRequest);
+                stack = describeStacksResult.getStacks().get(0);
+                stackStatus = stack.getStackStatus();
+                if (TERMINAL_STACK_STATUSES.contains(StackStatus.fromValue(stackStatus))) {
+                    return stack;
+                }
+                Thread.sleep(POLL_STACK_STATUS_DELAY);
             }
-            Thread.sleep(POLL_STACK_STATUS_DELAY);
+            return stack;
+        } catch (Exception e) {
+            throw new RuntimeException("Error occurred when polling stack status for " + stackName, e);
         }
-        return stack;
     }
 
     public void deleteBlueprintStack(String stackName) {
