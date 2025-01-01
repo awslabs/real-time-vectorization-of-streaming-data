@@ -15,10 +15,10 @@ import java.nio.charset.StandardCharsets;
 
 import static com.amazonaws.datastreamvectorization.integrationtests.constants.IntegTestConstants.INTEG_TEST_INPUTS_FILE;
 
-// Adding a comment to test CodePipeline GitHub push integration
 public class BlueprintIT {
     @Test
     void runTests() {
+        System.out.println("Print line for testing GitHub trigger integration: 1");
         // TODO: handle test parallelization later
         IntegTestCaseInput[] testInputs = this.readTestConfigFile().getTestCases();
         for (IntegTestCaseInput testCase : testInputs) {
