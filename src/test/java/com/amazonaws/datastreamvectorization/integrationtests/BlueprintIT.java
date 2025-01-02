@@ -18,7 +18,7 @@ import static com.amazonaws.datastreamvectorization.integrationtests.constants.I
 public class BlueprintIT {
     @Test
     void runTests() {
-        System.out.println("Print line for testing GitHub trigger integration: 9");
+        System.out.println("Print line for testing GitHub trigger integration: 10");
         // TODO: handle test parallelization later
         IntegTestCaseInput[] testInputs = this.readTestConfigFile().getTestCases();
         for (IntegTestCaseInput testCase : testInputs) {
